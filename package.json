@@ -1,0 +1,7 @@
+{
+  "name":"churatabi-arrival-qa",
+  "private":true,
+  "version":"0.1.0",
+  "scripts":{"test":"node --test tests/world.test.mjs","test:browser":"node tests/browser.cjs chromium && node tests/browser.cjs webkit","test:edge":"node tests/edge.cjs"},
+  "devDependencies":{"playwright":"1.62.1"}
+}

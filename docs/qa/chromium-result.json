@@ -1,0 +1,24 @@
+{
+  "engine": "chromium",
+  "passed": true,
+  "viewportChecks": [
+    "390x844 touch",
+    "844x390 landscape",
+    "1280x900 desktop"
+  ],
+  "checks": [
+    "load",
+    "keyboard movement",
+    "touch NPC auto approach",
+    "dialogue",
+    "pickup",
+    "return",
+    "aquarium",
+    "ending",
+    "journal",
+    "save reload",
+    "sound enabled",
+    "no console or HTTP errors"
+  ],
+  "errors": []
+}

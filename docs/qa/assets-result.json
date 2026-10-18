@@ -1,0 +1,64 @@
+{
+  "passed": true,
+  "assets": {
+    "hero": {
+      "sheet": [
+        128,
+        192
+      ],
+      "cell": [
+        32,
+        48
+      ],
+      "directions": 4,
+      "framesPerDirection": 4,
+      "alpha": true
+    },
+    "guide": {
+      "sheet": [
+        128,
+        192
+      ],
+      "cell": [
+        32,
+        48
+      ],
+      "directions": 4,
+      "framesPerDirection": 4,
+      "alpha": true
+    },
+    "grandma": {
+      "sheet": [
+        128,
+        192
+      ],
+      "cell": [
+        32,
+        48
+      ],
+      "directions": 4,
+      "framesPerDirection": 4,
+      "alpha": true
+    },
+    "traveler": {
+      "sheet": [
+        128,
+        192
+      ],
+      "cell": [
+        32,
+        48
+      ],
+      "directions": 4,
+      "framesPerDirection": 4,
+      "alpha": true
+    },
+    "lobby": {
+      "size": [
+        768,
+        640
+      ],
+      "colors": 1502
+    }
+  }
+}

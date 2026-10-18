@@ -1,0 +1,14 @@
+{
+  "passed": true,
+  "checks": [
+    "early exit blocked",
+    "pickup before guide blocked",
+    "return without card blocked",
+    "modal prevents movement",
+    "hold pad moves and release stops",
+    "320x568 has no horizontal overflow",
+    "storage denied is disclosed",
+    "missing asset shows recoverable error",
+    "corrupt save recovers"
+  ]
+}
