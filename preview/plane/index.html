@@ -73,7 +73,7 @@ function fx(f=560){
   try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;audio=audio||new AC();if(audio.state==="suspended")audio.resume();const o=audio.createOscillator(),v=audio.createGain();o.type="sine";o.frequency.setValueAtTime(f,audio.currentTime);o.frequency.exponentialRampToValueAtTime(f*1.2,audio.currentTime+.08);v.gain.setValueAtTime(.014,audio.currentTime);v.gain.exponentialRampToValueAtTime(.001,audio.currentTime+.11);o.connect(v).connect(audio.destination);o.start();o.stop(audio.currentTime+.12)}catch(_){}
 }
 function speech(name,msg){who.textContent=name;say.textContent=msg;}
-function deliver(){if(!queue.length){busy=false;return;}busy=true;const item=queue.shift();speech(item[0],item[1]);}
+function deliver(){if(!queue.length){busy=false;if(step===4&&!complete)finish();return;}busy=true;const item=queue.shift();speech(item[0],item[1]);}
 function conversation(pages){queue=pages.slice();deliver();fx(510);}
 function hit(which){
  if(!started||complete)return;
@@ -111,7 +111,7 @@ function advance(){
  if(step===1)conversation([["主人公","準備完了！　列に並んで、前へ進もう。"]]);
  else if(step===2)conversation([["主人公","もうすぐ降りられる！\n外がまぶしい……！"]]);
  else if(step===3)conversation([["客室乗務員","出口はこちらです。お足元にお気をつけください。"]]);
- else if(step===4){conversation([["主人公","わあ、あったかい！\n沖縄に来たんだ……！"]]);setTimeout(()=>{if(step===4&&!complete)finish()},1700)}
+ else if(step===4){conversation([["主人公","わあ、あったかい！\n沖縄に来たんだ……！"]])}
 }
 function finish(){if(complete)return;complete=true;E("finish").hidden=false;fx(784);setTimeout(()=>fx(1047),120);E("walk").textContent="到着！";E("walk").disabled=true}
 function back(){if(!started||complete||busy)return;step=Math.max(0,step-1);refresh();fx(400)}
