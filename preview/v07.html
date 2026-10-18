@@ -1,0 +1,142 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><meta name="theme-color" content="#132c3b"><title>ちゅらたび｜那覇空港 到着ロビー v0.7</title><style>*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#101e29;color:#fff;font-family:system-ui,"Hiragino Kaku Gothic ProN",sans-serif}#game{width:100vw;height:100dvh;display:block;image-rendering:pixelated;touch-action:none}#ui{position:fixed;inset:0;pointer-events:none}#top{position:absolute;top:max(12px,env(safe-area-inset-top));left:12px;right:12px;display:flex;gap:8px;align-items:flex-start;justify-content:space-between}.panel{background:#102b3de8;border:2px solid #91b5b7;border-radius:8px;box-shadow:0 4px 0 #081721;padding:8px 11px}.eyebrow{font-size:10px;letter-spacing:2px;color:#f4d394}.heading{font-size:15px;font-weight:900}.small{font-size:11px;color:#c1d9d7}#goal{max-width:225px}#hint{position:absolute;bottom:calc(17px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);white-space:nowrap;background:#122b3acb;padding:7px 12px;border-radius:18px;font-size:11px;color:#d9e7e5}#dialog{display:none;position:absolute;bottom:calc(22px + env(safe-area-inset-bottom));left:12px;right:12px;background:#fff1d4;color:#293d46;border:4px solid #284759;border-radius:7px;box-shadow:0 7px 0 #091d29;padding:13px 16px;pointer-events:auto;min-height:124px}#who{font-size:12px;color:#aa5e3b;font-weight:900;letter-spacing:1px}#speech{font-size:15px;font-weight:750;line-height:1.65;margin:5px 0 9px}#next{float:right;border:0;background:#24576a;color:white;border-radius:5px;padding:8px 16px;font-weight:800}#start{position:absolute;inset:0;display:grid;place-items:center;background:linear-gradient(#102e42d9,#0a1d2ee8);pointer-events:auto;text-align:center;padding:22px}#start .box{width:min(400px,100%);border:3px solid #e8d29d;background:#14364c;padding:28px 18px;box-shadow:0 10px 0 #091b2a}#start h1{font-size:40px;letter-spacing:6px;color:#ffe2a5;margin:10px 0 4px;text-shadow:3px 4px #7e5e43}#start p{font-size:13px;line-height:1.9;color:#d8e8e8}#play{margin-top:16px;padding:13px 28px;background:#efc978;color:#253e47;border:0;border-bottom:5px solid #9d713f;border-radius:6px;font-size:17px;font-weight:900}#version{position:absolute;bottom:calc(7px + env(safe-area-inset-bottom));right:12px;color:#b5c4c8;font-size:10px}</style></head><body><canvas id="game"></canvas><div id="ui"><div id="top"><div class="panel"><div class="eyebrow">OKINAWA · NAHA</div><div class="heading">那覇空港 到着ロビー</div><div class="small">第一章 / めんそーれ沖縄</div></div><div class="panel" id="goal"><div class="eyebrow">NEXT OBJECTIVE</div><div class="heading" id="objective">案内係に話しかけよう</div></div></div><div id="hint">床をタップして移動 · 人をタップして会話</div><div id="dialog"><div id="who"></div><div id="speech"></div><button id="next">つづける ▸</button></div><div id="start"><div class="box"><div class="eyebrow">A LITTLE JOURNEY IN OKINAWA</div><h1>ちゅらたび</h1><div style="color:#f3b887;letter-spacing:4px;font-weight:900">那覇空港 到着編</div><p>飛行機を降りたら、そこは沖縄。<br>旅の最初の一歩を踏み出そう。</p><button id="play">旅をはじめる ▸</button><p style="font-size:11px">タップで歩く · 案内係と会話 · ゆいレールを目指す</p></div></div><div id="version">SOUND & CHAPTER PASS 0.7</div></div><script>
+(()=>{'use strict';
+const canvas=document.querySelector('#game'),ctx=canvas.getContext('2d',{alpha:false});let W=360,H=640,S=2,ox=0,oy=0,cam=0,started=false,step=0,dialogQueue=[],active=false,last=0,walkT=0;
+const TILE=32,MW=14,MH=29;let walls=new Set();const block=(x,y)=>walls.add(x+','+y);
+const npcs=[{x:6,y:7,name:'空港案内係',color:'#e5ac79',hair:'#3d2d32',shirt:'#4a86a6',text:['めんそーれ！ 沖縄へようこそ。','ゆいレールは、到着ロビーから案内表示に沿って進んでくださいね。']},{x:10,y:13,name:'旅人',color:'#d9a278',hair:'#5b4038',shirt:'#dc946b',text:['沖縄に着いた瞬間、空気が違うね。','まずは国際通りに行ってみようかな。']},{x:4,y:19,name:'地元のおばあ',color:'#c9956f',hair:'#bcb3a5',shirt:'#a17cae',text:['はいさい。慌てず、ゆっくり楽しんでね。','沖縄の旅は、寄り道も楽しいさー。']}];
+const player={x:7,y:23,px:7*32,py:23*32,dir:0};let path=[],targetNpc=null;const key=(x,y)=>x+','+y;
+for(let y=0;y<MH;y++)for(let x=0;x<MW;x++)if(x===0||x===MW-1||y===0||y===MH-1)block(x,y);
+for(let x=1;x<MW-1;x++){if(x<4||x>9){for(let y of [3,4,5,6,9,10,11,16,17,18,22,23,24])block(x,y)}}
+for(let x=4;x<=9;x++)block(x,3);for(let x=4;x<=9;x++)block(x,26);
+for(let n of npcs)block(n.x,n.y);
+function resize(){let d=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(innerWidth*d);canvas.height=Math.round(innerHeight*d);canvas.style.width=innerWidth+'px';canvas.style.height=innerHeight+'px';S=Math.max(1,Math.min(canvas.width/360,canvas.height/580));W=canvas.width/S;H=canvas.height/S;ox=(W-448)/2;ctx.imageSmoothingEnabled=false}addEventListener('resize',resize);resize();
+function rect(x,y,w,h,c){ctx.fillStyle=c;ctx.fillRect(Math.round(x),Math.round(y),Math.ceil(w),Math.ceil(h))}
+function line(x,y,w,h,c){rect(x,y,w,h,c)}
+function spr(x,y,c,hair,shirt,dir=0,frame=0){x=Math.round(x);y=Math.round(y)-12;const p=(a,b,w,h,col)=>rect(x+a,y+b,w,h,col);let k=frame?2:0;let ink='#28384a';p(6,45,23,2,'#344b5555');p(9,36,7,7+k,'#3a5066');p(19,36+k,7,7-k,'#3a5066');p(7,42+k,10,4,ink);p(18,42-k,10,4,ink);if(dir===2){p(6,20,23,16,'#866b53');p(9,22,17,11,'#c39b6b')}p(6,21,23,16,ink);p(9,22,17,13,shirt);p(5,24,5,10,c);p(26,24,5,10,c);p(8,6,20,16,ink);p(9,7,18,14,c);p(7,4,22,9,hair);p(10,2,16,5,hair);p(7,10,4,7,hair);p(25,9,4,8,hair);if(dir===0){p(12,14,4,1,'#60473d');p(21,14,4,1,'#60473d');p(13,16,2,2,ink);p(22,16,2,2,ink);p(17,19,3,1,'#aa6d5d')}else if(dir===2){p(10,11,16,9,hair)}else{p(dir===1?23:11,15,2,2,ink)}p(11,35,13,2,'#d6d0bc')}
+function plant(x,y){rect(x+6,y+18,20,13,'#8d604a');rect(x+8,y+20,16,8,'#bb8060');rect(x+14,y+4,4,20,'#396a4e');for(let [a,b] of [[6,7],[20,5],[4,13],[20,14],[11,2]]){rect(x+a,y+b,10,6,'#285a49');rect(x+a+2,y+b,7,4,'#4f986b')}}
+function chair(x,y){rect(x+2,y+6,28,20,'#263e50');rect(x+4,y+6,24,6,'#6f9ca3');rect(x+5,y+13,22,10,'#527e88');rect(x+2,y+25,5,4,'#c8a57b');rect(x+25,y+25,5,4,'#c8a57b')}
+function drawMap(){rect(0,0,448,928,'#b5c3bc');for(let y=0;y<MH;y++)for(let x=0;x<MW;x++){let a=x*TILE,b=y*TILE;rect(a,b,32,32,(x+y)%2?'#c9d2c8':'#d6dbcf');rect(a,b,32,1,'#aabcb4');rect(a,b,1,32,'#b2c1b9');if(x===0||x===13){rect(a,b,32,32,'#395b6c');rect(a+3,b+2,26,28,'#557989');rect(a+4,b+3,2,24,'#87a5a7')}if(walls.has(key(x,y))&&x>0&&x<13&&y>0&&y<28){rect(a,b,32,32,'#829c9b');rect(a,b,32,4,'#55737c');rect(a+3,b+7,26,19,'#a5b5ad')}} 
+for(let y of [4,10,17,23]){rect(0,y*32,96,32,'#365d70');rect(5,y*32+4,86,22,'#7eafc1');rect(9,y*32+6,76,17,'#b3d5d5');rect(18,y*32+9,34,3,'#f4ead0')}
+for(let y of [4,10,17,23]){rect(352,y*32,96,32,'#365d70');rect(357,y*32+4,86,22,'#7eafc1');rect(362,y*32+6,76,17,'#b3d5d5')}
+for(let y of [9,16,22]){plant(40,y*32);plant(384,y*32)}
+for(let y of [11,18]){chair(42,y*32);chair(374,y*32)}
+rect(127,118,194,31,'#294c5d');rect(131,122,186,23,'#e6d9ac');rect(136,127,10,12,'#4c907f');text('到着ロビー  ARRIVALS',151,137,'#294c5d',12);
+rect(133,777,182,33,'#275c67');rect(138,782,172,22,'#e8c77f');text('ゆいレール  ↑',159,797,'#274a53',14);
+for(let x=4;x<=9;x++){rect(x*32,0,32,32,'#426574');rect(x*32+4,5,24,22,'#6d98a0')}
+rect(159,832,128,17,'#496e70');rect(165,835,116,10,'#b3c3b6');
+for(let i=0;i<9;i++){rect(140+i*19,558,9,2,'#d2bd8b')}
+}
+
+function detailPass(t){
+  // Hand-placed environmental details: arrival lounge / information desk / wayfinding
+  // Subtle floor reflections and grout breaks
+  for(let y=1;y<28;y++)for(let x=1;x<13;x++){
+    if(walls.has(key(x,y)))continue;
+    let a=x*32,b=y*32,seed=(x*37+y*71)%13;
+    if(seed<3){rect(a+4,b+4,15,1,'#ffffff22');rect(a+4,b+5,1,8,'#ffffff1c')}
+    if(seed===6){rect(a+22,b+22,5,1,'#8ea9a028')}
+  }
+  // Arrival glass curtain wall and tropical sky behind it
+  for(let x=1;x<=12;x++){
+    let a=x*32;rect(a,32,32,62,'#355f72');
+    rect(a+2,35,28,52,'#85b8c6');
+    rect(a+4,37,24,42,'#a9d8d7');
+    rect(a+5,38,22,11,'#cfe8dc');
+    rect(a+2,35,3,53,'#244e64');
+    rect(a+29,35,3,53,'#244e64');
+    rect(a,85,32,8,'#527a80');
+  }
+  // Distant island skyline through glass
+  for(let x=1;x<=12;x++){
+    let a=x*32;
+    rect(a+5,72,20,8,'#6a9a94');
+    rect(a+7,67,5,7,'#789b8e');
+    rect(a+17,64,4,11,'#73998c');
+  }
+  // Repeating structural columns with bevel and contact shadows
+  for(let y of [6,14,21]){
+    for(let x of [1,12]){
+      let a=x*32,b=y*32;
+      rect(a-3,b-12,37,67,'#203c4d44');
+      rect(a+2,b-13,24,63,'#e0dbcb');
+      rect(a+2,b-13,5,63,'#f7edda');
+      rect(a+23,b-13,3,63,'#879b9b');
+      rect(a-1,b+48,30,6,'#7e9591');
+    }
+  }
+  // Suspended navy airport direction signs
+  for(let [y,caption,arrow] of [[224,'国内線 到着口','↓'],[430,'ゆいレール / モノレール','↑'],[680,'交通アクセス / EXIT','↓']]){
+    rect(121,y-12,3,13,'#546e72');rect(322,y-12,3,13,'#546e72');
+    rect(114,y,220,36,'#172f44');rect(117,y+3,214,30,'#2a4b60');
+    rect(120,y+5,4,26,'#e9b768');text(arrow,129,y+24,'#f8d27d',19);
+    text(caption,155,y+22,'#f2f3e6',12);
+    rect(118,y+34,213,3,'#12253766');
+  }
+  // Arrival information counter with small physical objects
+  rect(163,170,124,19,'#2d5965');rect(166,168,118,5,'#a2d1c8');
+  rect(165,186,122,18,'#9bb6af');rect(165,186,122,3,'#e1ddd0');
+  rect(175,158,20,12,'#234759');rect(178,160,14,7,'#82c4bb');
+  rect(250,160,17,10,'#e9e5d5');rect(252,162,13,2,'#4b7b81');
+  rect(268,175,7,4,'#c9a86c');
+  // Baggage cart and colorful suitcases
+  rect(285,322,5,40,'#4c6771');rect(286,357,49,4,'#4c6771');
+  rect(293,330,26,26,'#bd7659');rect(297,331,19,4,'#df9a76');
+  rect(321,338,12,18,'#467a9b');rect(322,340,10,3,'#85b4c4');
+  rect(291,361,8,5,'#283f48');rect(323,361,8,5,'#283f48');
+  // Wall-mounted travel posters
+  for(let [x,y,c] of [[22,335,'#e5a16b'],[376,565,'#6aadb0']]){
+    rect(x-2,y-2,37,47,'#26485a');rect(x,y,33,42,'#f2e3c8');
+    rect(x+3,y+3,27,23,'#9bc7c5');
+    rect(x+3,y+18,27,8,c);rect(x+9,y+10,4,14,'#4b826b');
+    rect(x+5,y+30,23,2,'#b9a37c');rect(x+5,y+35,17,2,'#b9a37c');
+  }
+  // Zebra-like yellow tactile paving guiding travelers
+  for(let y=248;y<770;y+=16){
+    rect(210,y,24,12,'#e6c77c');
+    for(let i=0;i<3;i++)rect(213+i*7,y+3,3,5,'#bd9a50');
+  }
+  // A warm spill of light from upper glass
+  for(let i=0;i<5;i++)rect(112+i*43,95,24,3,'#f8ead247');
+  // Ambient animated shimmer
+  let shimmer=Math.sin(t*.0015)*.5+.5;
+  rect(319,97,5+shimmer*9,2,'#ffffff55');
+}
+
+function text(t,x,y,c,size=12){ctx.fillStyle=c;ctx.font='bold '+size+'px system-ui,sans-serif';ctx.fillText(t,x,y)}
+function bfs(sx,sy,tx,ty){let q=[[sx,sy]],prev=new Map([[key(sx,sy),null]]),found=false;for(let i=0;i<q.length;i++){let [x,y]=q[i];if(x===tx&&y===ty){found=true;break}for(let [dx,dy] of [[0,-1],[1,0],[0,1],[-1,0]]){let a=x+dx,b=y+dy,k=key(a,b);if(a<1||a>12||b<1||b>27||walls.has(k)||prev.has(k))continue;prev.set(k,[x,y]);q.push([a,b])}}if(!found)return[];let p=[],cur=[tx,ty];while(cur&&(cur[0]!==sx||cur[1]!==sy)){p.unshift(cur);cur=prev.get(key(...cur))}return p}
+function interact(n){if(n.name==='空港案内係'&&step===0){step=1;document.querySelector('#objective').textContent='ゆいレールの案内へ進もう'}say(n.name,n.text)}
+function say(who,lines){dialogQueue=lines.map(s=>[who,s]);active=true;path=[];showNext()}
+function showNext(){sfx("talk");let d=document.querySelector('#dialog');if(!dialogQueue.length){d.style.display='none';active=false;return}let [w,t]=dialogQueue.shift();document.querySelector('#who').textContent=w;document.querySelector('#speech').textContent=t;document.querySelector('#next').textContent=dialogQueue.length?'つづける ▸':'閉じる ✓';d.style.display='block'}
+document.querySelector('#next').onclick=showNext;
+function pointer(e){if(!started||active)return;let r=canvas.getBoundingClientRect(),x=(e.clientX-r.left)*(canvas.width/r.width)/S-ox,y=(e.clientY-r.top)*(canvas.height/r.height)/S+cam;let tx=Math.floor(x/TILE),ty=Math.floor(y/TILE);if(tx<1||tx>12||ty<1||ty>27)return;let n=npcs.find(n=>Math.abs(n.x-tx)<=0&&Math.abs(n.y-ty)<=0);if(n){let options=[[0,-1],[1,0],[0,1],[-1,0]].map(([dx,dy])=>[n.x+dx,n.y+dy]).filter(([a,b])=>!walls.has(key(a,b)));let routes=options.map(([a,b])=>bfs(player.x,player.y,a,b)).filter(p=>p.length||Math.abs(player.x-n.x)+Math.abs(player.y-n.y)===1).sort((a,b)=>a.length-b.length);if(routes.length){path=routes[0];targetNpc=n;if(!path.length)interact(n)}return}targetNpc=null;if(!walls.has(key(tx,ty)))path=bfs(player.x,player.y,tx,ty)}
+canvas.addEventListener('pointerdown',pointer);
+
+const ambience={enabled:true,ctx:null};
+function sfx(kind){
+ try{
+  if(!ambience.enabled)return;
+  const A=window.AudioContext||window.webkitAudioContext;
+  if(!A)return;
+  if(!ambience.ctx)ambience.ctx=new A();
+  const ac=ambience.ctx,now=ac.currentTime;
+  const tones=kind==='step'?[390]:kind==='talk'?[523,659]:kind==='finish'?[523,659,784,1046]:[440,554];
+  tones.forEach((hz,i)=>{let o=ac.createOscillator(),g=ac.createGain();o.type='sine';o.frequency.setValueAtTime(hz,now+i*.09);g.gain.setValueAtTime(.0001,now+i*.09);g.gain.exponentialRampToValueAtTime(kind==='step'?.012:.035,now+i*.09+.012);g.gain.exponentialRampToValueAtTime(.0001,now+i*.09+.11);o.connect(g);g.connect(ac.destination);o.start(now+i*.09);o.stop(now+i*.09+.12)})
+ }catch(e){}
+}
+let sparks=[],footprints=[],chapterCompleted=false;
+function spawnSpark(x,y){for(let i=0;i<11;i++)sparks.push({x:x+16,y:y+12,vx:(Math.random()-.5)*.12,vy:-Math.random()*.16-.03,life:800+Math.random()*650,color:['#f9d991','#ffffff','#89c5b7'][i%3]})}
+function fx(dt){sparks=sparks.filter(p=>(p.life-=dt)>0);for(let p of sparks){p.x+=p.vx*dt;p.y+=p.vy*dt}}
+function drawFx(){for(let p of sparks){let sz=p.life>500?3:2;rect(p.x,p.y,sz,sz,p.color)}}
+function chapterEnd(){
+ if(chapterCompleted)return;
+ chapterCompleted=true;step=3;
+ document.querySelector('#objective').textContent='到着ロビー編 クリア';
+ spawnSpark(player.px,player.py);
+ sfx('finish');
+ say('旅の記録',['めんそーれ！ 那覇空港の到着ロビーを探索した。','空港の外には、沖縄の景色が広がっている。','第一章「到着ロビー」クリア！ 次の旅は、ゆいレールへ。']);
+}
+
+function update(dt){if(!started||active)return;let dest=path[0];if(dest){let dx=dest[0]*32-player.px,dy=dest[1]*32-player.py;let dist=Math.hypot(dx,dy),move=Math.min(dist,dt*.105);if(dist<1.5){player.px=dest[0]*32;player.py=dest[1]*32;player.x=dest[0];player.y=dest[1];path.shift();sfx("step");if(!path.length&&targetNpc){let n=targetNpc;targetNpc=null;interact(n)}if(!path.length&&player.y<=5&&step===1){step=2;document.querySelector('#objective').textContent='ゆいレールへ向かおう';say('旅の記録',['那覇空港の案内を確認した！','沖縄の旅が、いよいよ始まる。'])}if(!path.length&&player.y>=25&&step===2){chapterEnd()}}else{player.px+=dx/dist*move;player.py+=dy/dist*move;player.dir=Math.abs(dx)>Math.abs(dy)?(dx>0?1:3):(dy>0?0:2);walkT+=dt}}}
+function render(t){let dt=Math.min(45,t-last||16);last=t;update(dt);fx(dt);ctx.setTransform(S,0,0,S,0,0);ctx.fillStyle='#162f3c';ctx.fillRect(0,0,W,H);cam=Math.max(0,Math.min(MH*TILE-H+60,player.py-H*.58));ctx.save();ctx.translate(ox,-cam);drawMap();detailPass(t);for(let n of npcs)spr(n.x*32,n.y*32-2,n.color,n.hair,n.shirt,0,0);spr(player.px,player.py-2,'#e4ad87','#2d343e','#f3f0df',player.dir,path.length?Math.floor(walkT/130)%2:0);if(path.length){let [x,y]=path[path.length-1];rect(x*32+12,y*32+28,8,3,'#d99e54')}drawFx();ctx.restore();requestAnimationFrame(render)}requestAnimationFrame(render);
+document.querySelector('#play').onclick=()=>{started=true;sfx('talk');document.querySelector('#start').style.display='none';say('旅の記録',['那覇空港に到着！ 南国の空気が迎えてくれる。','まずは青い制服の案内係に話しかけよう。'])};
+})();
+</script></body></html>
