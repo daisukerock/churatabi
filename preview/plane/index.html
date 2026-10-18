@@ -1,95 +1,132 @@
 <!doctype html>
-<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#10283e">
-<title>ちゅらたび｜飛行機到着編</title>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a2541">
+<meta name="description" content="沖縄旅行RPGちゅらたび。到着した飛行機から降りる、イラストを使った短いインタラクティブ・プロローグ。">
+<title>ちゅらたび — 飛行機から降りよう</title>
 <style>
-*{box-sizing:border-box}body{margin:0;min-height:100dvh;background:radial-gradient(ellipse at top,#285879,#102638 68%,#0b1929);font-family:system-ui,-apple-system,sans-serif;color:#fff;display:flex;align-items:center;flex-direction:column}
-header{width:min(96vw,760px);padding:16px 3px 10px;display:flex;justify-content:space-between;align-items:center;font-size:14px}header b{font-size:22px;letter-spacing:.08em;color:#ffdd85}header span{color:#addbeb}
-main{width:min(96vw,760px);position:relative;border:4px solid #e5cca0;box-shadow:0 0 0 4px #233c58,0 18px 45px #071727aa;border-radius:12px;overflow:hidden;background:#192e47}
-canvas{display:block;width:100%;aspect-ratio:4/3;image-rendering:pixelated;image-rendering:crisp-edges;touch-action:none}
-#hud{position:absolute;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;gap:6px;pointer-events:none}
-.pill{border:2px solid #ffedc2;background:#0d315ac9;border-radius:5px;box-shadow:0 3px 0 #101d33;padding:5px 9px;font-size:clamp(10px,2.3vw,15px);font-weight:bold}
-#speech{position:absolute;bottom:13px;left:6%;width:88%;padding:12px 17px 13px;min-height:79px;background:#10233de8;border:3px solid #f2e4c3;box-shadow:0 4px 0 #12243c,0 0 0 2px #415f7e inset;border-radius:8px;text-shadow:1px 1px #000;cursor:pointer}
-#speaker{font-size:12px;color:#92dcff;font-weight:700;margin-bottom:6px}#message{font-size:clamp(13px,2.8vw,19px);line-height:1.4}
-#controls{width:min(96vw,760px);display:flex;align-items:center;justify-content:space-between;gap:10px;padding:20px 4px 8px}button{font-family:inherit;background:#234c71;border:2px solid #f9e2aa;box-shadow:0 4px 0 #0a1a30;color:white;padding:11px 14px;border-radius:10px;font-size:16px;font-weight:700;touch-action:manipulation;cursor:pointer}button:active{transform:translateY(3px);box-shadow:none}#go{background:#2c785a;flex:1;max-width:230px}#back{flex:1;max-width:140px}#replay{background:#9d553c;display:none}#instruction{font-size:12px;color:#afc6d7;text-align:center;line-height:1.8;padding:6px 12px 30px}#finish{display:none;position:absolute;inset:0;background:linear-gradient(180deg,#174e7db8,#08203be8);align-items:center;justify-content:center;flex-direction:column;gap:10px;text-align:center;padding:30px}#finish h1{font-size:clamp(22px,6vw,46px);color:#ffe494;text-shadow:3px 4px #2f3e65;margin:0}#finish p{line-height:1.8;font-weight:bold;font-size:clamp(15px,2.8vw,21px)}
-</style></head><body>
-<header><b>✈ ちゅらたび</b><span>CHURATABI · NAHA AIRPORT</span></header>
-<main><canvas id="game" width="360" height="270" aria-label="沖縄に到着した飛行機の中を歩いて降りるゲーム"></canvas>
-<div id="hud"><span class="pill" id="place">STEP 1 / 機内</span><span class="pill">☀ 沖縄へようこそ</span></div>
-<div id="speech" role="button" tabindex="0" aria-label="会話を進める"><div id="speaker">ちゅらたび</div><div id="message">ついに沖縄に着いた！ 前の出口へ進もう！</div></div>
-<div id="finish"><h1>めんそーれ！ 沖縄</h1><p>飛行機を降りた！<br>ここから旅がはじまる。</p></div>
-</main><div id="controls"><button id="back">▼ もどる</button><button id="go">▲ 出口へ進む</button><button id="replay">↻ もう一度</button></div>
-<div id="instruction">出口へ進むを長押し／通路をタップして歩こう。<br>キーボードの ↑↓ でも操作できます。</div>
+:root{--ink:#0e2947;--blue:#0d5281;--gold:#f7d48e;--sky:#76d7e9;--shell:#0b2741;--accent:#ffd87c}
+*{box-sizing:border-box}html{height:100%}body{margin:0;min-height:100dvh;background:radial-gradient(ellipse at 50% -20%,#226a8a 0%,#0d365b 48%,#071c34 95%);color:#fff8e8;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif}
+button{font:inherit;cursor:pointer;touch-action:manipulation}button:focus-visible{outline:3px solid #ffe18a;outline-offset:3px}button:disabled{opacity:.42;cursor:default}
+#app{width:min(100%,850px);margin:0 auto;padding:15px 13px 34px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 13px}.brand{font-size:24px;font-weight:900;letter-spacing:.14em;color:#ffe4a3;text-shadow:0 2px #052038}.brand small{display:block;font-size:10px;letter-spacing:.2em;font-weight:600;color:#a3d4e8}
+.chapter{font-size:10px;line-height:1.8;letter-spacing:.13em;text-align:right;color:#c2e4ed;font-weight:800}
+.stage-shell{position:relative;overflow:hidden;border:4px solid #d4b276;outline:3px solid #263e58;border-radius:10px;background:#254966;box-shadow:0 8px 0 #071a2e,0 15px 30px #05172d9c}
+.stage{position:relative;width:100%;aspect-ratio:4/3;overflow:hidden;isolation:isolate;background:linear-gradient(#4f8eb2,#e8cead)}
+#art{width:100%;height:100%;position:absolute;inset:0;object-fit:cover;image-rendering:auto;transform-origin:58% 30%;transition:transform 1.1s cubic-bezier(.18,.78,.17,1),filter .8s;user-select:none;pointer-events:none}
+.stage:before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#062a4860 0%,transparent 23%,transparent 56%,#061c34bb 100%);z-index:1;pointer-events:none}
+.stage:after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 60% 39%,#fff5b400,transparent 35%,#03182955 100%);z-index:1;pointer-events:none}
+#sunlight{position:absolute;z-index:1;top:14%;left:49%;width:40%;height:63%;clip-path:polygon(25% 0,66% 0,100% 100%,0 100%);background:linear-gradient(175deg,#fff5b84b,transparent 80%);mix-blend-mode:screen;opacity:.3;transition:opacity 1s;pointer-events:none}
+#sparkle{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden}
+.particle{position:absolute;display:block;width:3px;height:3px;background:#fff4d3;border-radius:50%;animation:drift 5s linear infinite;box-shadow:0 0 7px #fff8b4b8}@keyframes drift{0%{transform:translateY(24px) translateX(-8px);opacity:0}30%{opacity:.9}100%{transform:translateY(-54px) translateX(15px);opacity:0}}
+.hud{position:absolute;z-index:3;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;gap:8px;pointer-events:none}.hud span{font-weight:900;font-size:clamp(10px,2vw,14px);padding:7px 10px;background:#0b304cbf;border:2px solid #f3e2b8d9;border-radius:4px;box-shadow:0 3px 0 #061b30}
+.marker{position:absolute;z-index:5;display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;border:2px solid #ffefc5;background:#124b6fd9;color:#fff7cc;box-shadow:0 0 0 4px #ffe5a52e,0 3px 8px #0007;animation:pulse 2.4s ease-in-out infinite;font-size:17px}.marker .tip{display:none;position:absolute;bottom:120%;width:max-content;max-width:130px;background:#103856ec;color:#fff3d3;padding:5px 8px;font-size:11px;border:1px solid #ffe3a1;border-radius:4px}.marker:focus .tip,.marker:hover .tip{display:block}.marker.done{background:#2c815f;border-color:#e8edbc}.marker[hidden]{display:none}@keyframes pulse{0%,100%{box-shadow:0 0 0 4px #ffe5a52e,0 3px 8px #0007}50%{box-shadow:0 0 0 9px #ffe5a50d,0 3px 8px #0007}}
+#bag{left:15%;top:8%}#window{left:6%;top:42%}#crew{left:72%;top:42%}
+.dialog{position:absolute;z-index:7;bottom:10px;left:5%;width:90%;min-height:96px;padding:15px 17px 13px;background:linear-gradient(110deg,#0d2745f5,#15355bfa);border:3px solid #f5dfb8;border-radius:7px;box-shadow:0 3px 0 #071b36,0 0 0 3px #274c71 inset;color:#fff6e8;cursor:pointer;text-align:left}
+.dialog strong{color:#8de0f2;font-size:11px;letter-spacing:.06em;display:block;margin-bottom:8px}.dialog p{font-size:clamp(13px,2.9vw,19px);line-height:1.55;font-weight:700;letter-spacing:.015em;margin:0 20px 0 0;white-space:pre-line;text-shadow:0 1px #071324}.dialog .next{position:absolute;right:16px;bottom:9px;color:#ffe7a5;animation:bob 1.1s ease-in-out infinite}@keyframes bob{50%{transform:translateY(4px)}}
+#actionbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 3px 0}
+.action{border:2px solid #f9dda2;border-radius:9px;background:linear-gradient(#366c8c,#1c4e73);box-shadow:0 4px #06182b;color:#fff7dc;font-weight:900;padding:13px 10px;min-height:54px;font-size:clamp(12px,2.8vw,17px)}.action:active{transform:translateY(3px);box-shadow:none}
+#walk{flex:1;max-width:300px;background:linear-gradient(#3da381,#19674f);font-size:17px}#back{flex:0 1 137px}#journal{flex:0 1 115px}
+.objective{margin:19px 2px 8px;display:flex;align-items:center;justify-content:space-between;gap:14px;font-size:13px;font-weight:800}.objective strong{color:#ffe7a6}.objective small{color:#aacbd7}
+.progress{height:9px;background:#071d32;border:1px solid #56849f;border-radius:12px;overflow:hidden;margin:8px 2px 13px}.progress>span{display:block;height:100%;width:0%;background:linear-gradient(90deg,#54cfb1,#ffe18e);transition:width .7s}
+.route{display:flex;justify-content:space-between;gap:7px;margin:0 2px;color:#b9dae4;font-size:10px;font-weight:900}.route span.active{color:#ffdc91}.route span.passed{color:#a6edc9}
+.hint{margin-top:21px;text-align:center;font-size:12px;line-height:1.8;color:#b4cbdd}
+.overlay{position:absolute;inset:0;z-index:11;display:flex;align-items:center;justify-content:center;background:linear-gradient(#062d4a7a,#061c35e9);padding:23px;text-align:center}.overlay[hidden]{display:none!important}.intro{max-width:470px;position:relative;padding:19px 23px 24px;border:2px solid #ffdf9d;background:#0d3055de;border-radius:10px;box-shadow:0 8px 28px #011528b3;backdrop-filter:blur(4px)}.eyebrow{letter-spacing:.25em;font-size:11px;color:#87dfe1;font-weight:800}.intro h1{font-size:clamp(25px,5.4vw,42px);line-height:1.35;color:#ffdfa0;text-shadow:0 3px #244565;margin:12px 0}.intro p{font-weight:700;font-size:clamp(12px,2.6vw,16px);line-height:1.85}.intro button{background:linear-gradient(#fbe39c,#e6b96c);border:2px solid #fff7d8;border-radius:8px;padding:12px 25px;color:#173a54;font-weight:900;font-size:17px;box-shadow:0 4px #7e5932}
+#finish{background:linear-gradient(160deg,#0c6682bf,#071d39ec)}#finish h1{font-size:clamp(30px,6vw,48px)}
+#journalPanel{position:fixed;inset:0;z-index:50;background:#041321bd;display:flex;align-items:center;justify-content:center;padding:18px}#journalPanel[hidden]{display:none!important}.book{background:#fbf1d7;color:#244057;width:min(100%,430px);border:5px solid #c79c66;border-radius:12px;padding:22px;box-shadow:0 15px 30px #0009}.book h2{margin:0 0 15px}.book ul{list-style:none;padding:0;margin:0 0 18px}.book li{border-bottom:1px dashed #bea982;padding:11px 0;font-size:14px;font-weight:700}.book button{background:#205a78;color:white;border:0;padding:11px 20px;border-radius:7px}
+@media(max-width:400px){#app{padding:10px 7px 27px}.stage-shell{border-width:2px}.marker{width:30px;height:30px;font-size:15px}.hud{top:7px;left:6px;right:6px}.hud span{padding:5px}.dialog{min-height:86px;padding:10px 12px;bottom:7px}.dialog strong{margin-bottom:4px}.action{padding:11px 6px;min-height:50px}.route{font-size:9px}.intro{padding:16px 12px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div id="app">
+<header class="top"><div class="brand">ちゅらたび<small>沖縄を歩く、旅のRPG</small></div><div class="chapter">PROLOGUE 00<br>NAHA AIRPORT / 14:10</div></header>
+<section class="stage-shell" aria-label="飛行機到着編">
+<div class="stage" id="stage">
+<img id="art" alt="沖縄に着陸した飛行機の中。笑顔の乗客が降りようとしているイラスト。" loading="eager">
+<div id="sunlight"></div><div id="sparkle"></div>
+<div class="hud"><span>✈ 那覇空港 到着</span><span id="spotLabel">STAGE 01 · 機内</span></div>
+<button class="marker" id="bag" type="button" aria-label="上の棚の荷物を取る">🧳<span class="tip">荷物を取る</span></button>
+<button class="marker" id="window" type="button" aria-label="窓から外を眺める">☀<span class="tip">窓の外を見る</span></button>
+<button class="marker" id="crew" type="button" aria-label="客室乗務員と話す">♪<span class="tip">乗務員と話す</span></button>
+<button class="dialog" id="dialog" type="button" aria-live="polite"><strong id="who">ちゅらたび</strong><p id="speech">飛行機が沖縄に着いた！</p><span class="next">▼</span></button>
+<div class="overlay" id="start"><div class="intro"><div class="eyebrow">THE ADVENTURE BEGINS</div><h1>ついに、沖縄へ！</h1><p>降り立つ前から、もう旅は始まっている。<br>あの青い空の向こうへ。</p><button id="play" type="button">旅をはじめる →</button><p style="font-size:11px;color:#c9ddeb">約2分のインタラクティブ・プロローグ</p></div></div>
+<div class="overlay" id="finish" hidden><div class="intro"><div class="eyebrow">WELCOME TO OKINAWA</div><h1>めんそーれ！</h1><p>飛行機を降りた瞬間、<br>いつもと違う空気が、頬をなでた。</p><button id="toLobby" type="button">到着ロビーを探検する →</button><p style="font-size:11px">この先は既存の到着ロビー編につながります。</p></div></div>
+</div>
+</section>
+<div class="objective"><strong id="goal">まずは荷物を取ろう</strong><small id="count">0 / 3 DISCOVERED</small></div>
+<div class="progress"><span id="progress"></span></div>
+<div class="route"><span id="s0" class="active">① 到着</span><span id="s1">② 準備</span><span id="s2">③ 通路</span><span id="s3">④ 降機口</span><span id="s4">⑤ 沖縄へ</span></div>
+<div id="actionbar"><button class="action" id="back" type="button">◀ 戻る</button><button class="action" id="walk" type="button">▲ 出口へ進む</button><button class="action" id="journal" type="button">旅の手帳</button></div>
+<div class="hint">画面の光る場所をタップで調べる。<br>「出口へ進む」または ↑ キーで歩く。音は操作時に小さく鳴ります。</div>
+</div>
+<div id="journalPanel" hidden role="dialog" aria-modal="true" aria-label="旅の手帳"><div class="book"><h2>旅の手帳 · 空港到着</h2><ul><li id="jbag">○ 上の棚から手荷物を取る</li><li id="jwindow">○ 沖縄の青い空を見る</li><li id="jcrew">○ 客室乗務員にお礼を言う</li></ul><button id="closeJournal" type="button">旅にもどる</button></div></div>
 <script>
 (function(){
-'use strict';
-const canvas=document.getElementById('game'),g=canvas.getContext('2d');g.imageSmoothingEnabled=false;
-const C={navy:'#173654',seat:'#275a84',seatEdge:'#142c55',seatHi:'#4784a4',sand:'#f6d194',sky:'#4ebaf1',warm:'#fff1bc'};
-const $=id=>document.getElementById(id);let y=222,mode=0,goal=222,walking=false,frame=0,said=false,done=false,dialogDelay=0;
-function rect(x,y,w,h,c){g.fillStyle=c;g.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))}
-function poly(pts,c){g.fillStyle=c;g.beginPath();pts.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.closePath();g.fill()}
-function txt(s,x,y,z=9,color='#fff'){g.font='bold '+z+'px monospace';g.textAlign='center';g.fillStyle='#0f304c';g.fillText(s,x+1,y+1);g.fillStyle=color;g.fillText(s,x,y)}
-function person(x,py,shirt='#e6e2cf',pants='#315879',hair='#352d31',scale=1,hat=false){
-g.save();g.translate(Math.round(x),Math.round(py));g.scale(scale,scale);
-rect(-5,4,10,7,'#142d49');rect(-4,4,8,6,pants);rect(-4,-4,8,10,shirt);rect(-3,-13,6,8,'#f0b77c');rect(-4,-15,8,4,hair);rect(-7,-1,3,9,'#ecb481');rect(4,-1,3,9,'#ecb481');rect(-4,9,3,5,'#27405e');rect(1,9,3,5,'#27405e');
-if(hat){rect(-6,-14,12,2,'#edc783');rect(-4,-17,8,4,'#e4b96e')}g.restore()
+"use strict";
+const E=id=>document.getElementById(id);
+const art=E("art"),stage=E("stage"),say=E("speech"),who=E("who"),dialog=E("dialog");
+let step=0,started=false,complete=false,visited={bag:false,window:false,crew:false},queue=[],busy=false;
+let audio=null,holding=null;
+function fx(f=560){
+  try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;audio=audio||new AC();if(audio.state==="suspended")audio.resume();const o=audio.createOscillator(),v=audio.createGain();o.type="sine";o.frequency.setValueAtTime(f,audio.currentTime);o.frequency.exponentialRampToValueAtTime(f*1.2,audio.currentTime+.08);v.gain.setValueAtTime(.014,audio.currentTime);v.gain.exponentialRampToValueAtTime(.001,audio.currentTime+.11);o.connect(v).connect(audio.destination);o.start();o.stop(audio.currentTime+.12)}catch(_){}
 }
-function flower(x,yy,s=1){rect(x,yy,2*s,2*s,'#e43b68');rect(x+s,yy-s,s,s,'#fa8b8b');rect(x-s,yy+s,s,s,'#f94d79');rect(x+2*s,yy+s,s,s,'#d61d5b');rect(x+s,yy+s,s,s,'#ffe18b')}
-function backdrop(t){
-rect(0,0,360,270,'#eacda9');rect(0,0,360,39,'#c8a88a');for(let i=0;i<13;i++)rect(i*30,5,25,3,'#f7e3c2');rect(2,36,356,10,'#efdcbb');
-poly([[0,45],[114,45],[144,250],[0,270]],'#ede0ce');poly([[247,45],[360,45],[360,270],[217,250]],'#e9d8c2');
-poly([[136,60],[225,60],[266,270],[94,270]],'#af8c86');for(let z=0;z<13;z++)rect(101-z*.7,240-z*16,158+z*1.4,1,'#eed4a6');
-for(let k=0;k<4;k++){let xx=k*22+6;rect(xx,70,17,35,'#abc3cc');rect(xx+2,73,13,29,C.sky);rect(xx+2,89,13,10,'#63bfc2');rect(xx+3,82,9,2,'#fff9d9')}
-for(let k=0;k<4;k++){let xx=260+k*25;rect(xx,70,17,35,'#abc3cc');rect(xx+2,73,13,29,C.sky);rect(xx+2,89,13,10,'#5ec3b5');rect(xx+3,82,9,2,'#fff9d9')}
-for(let k=0;k<5;k++){let q=k*44;let a=20+q*.2; let sy=75+q*.8;const W=43+q*.34,H=43+q*.17;
-let left=140-W-3,right=221+3;
-rect(left-3,sy-3,W+6,H+6,C.seatEdge);rect(left,sy,W,H,C.seat);rect(left+3,sy+5,W-6,8,C.seatHi);rect(left+8,sy+H-10,W-16,8,'#102e59');
-rect(right,sy-3,W+6,H+6,C.seatEdge);rect(right+3,sy,W,H,C.seat);rect(right+6,sy+5,W-6,8,C.seatHi);rect(right+11,sy+H-10,W-16,8,'#102e59')}
-rect(142,47,78,51,'#a3bdc5');rect(149,49,65,45,'#75c4f4');rect(149,79,65,15,'#71c6a1');rect(156,80,45,4,'#317f9c');rect(155,60,16,8,'#ffffff');rect(180,55,12,5,'#ffffff');
-rect(149,96,66,7,'#84655c');rect(173,43,18,6,'#f5d78b');rect(166,34,30,11,'#2a724f');txt('EXIT',181,42,8,'#fff6d6');
-for(let i=0;i<8;i++){let xx=(i*48+16)%360;rect(xx,15,18,5,'#fff5c1')}
-rect(9,113,43,27,'#eff0d4');rect(12,116,37,21,'#1579a7');txt('OKINAWA',30,125,7,'#fff');flower(13,132,2);flower(37,132,2);
-rect(304,113,45,27,'#fcebd1');rect(307,116,39,21,'#228caa');txt('めんそーれ',326,129,7,'#fff8cf');flower(308,132,2);flower(340,132,2);
-person(124,124,'#50a59b','#686e8b','#2a313d',.65,true);
-person(246,133,'#db916e','#617ca0','#372a31',.77,false);
-person(115,187,'#efb164','#5c6da0','#4f2f36',1.1,true);
-person(250,192,'#ed647e','#5378a2','#3b3345',1.1,false);
-for(let i=0;i<10;i++){rect(88+i*20,256,8,2,i%2?'#cdad89':'#f2cd9d')}
+function speech(name,msg){who.textContent=name;say.textContent=msg;}
+function deliver(){if(!queue.length){busy=false;return;}busy=true;const item=queue.shift();speech(item[0],item[1]);}
+function conversation(pages){queue=pages.slice();deliver();fx(510);}
+function hit(which){
+ if(!started||complete)return;
+ const data={
+ bag:["主人公","荷物、よし！　忘れ物は……ないよね。"],
+ window:["主人公","わっ、空が青い！\n沖縄の光って、こんなに明るいんだ。"],
+ crew:["客室乗務員","ご搭乗ありがとうございました！\nどうぞ素敵な沖縄の旅を。"]
+ };
+ visited[which]=true;E(which).classList.add("done");E(which).querySelector(".tip").textContent="調べました";
+ let pages=[data[which]];
+ if(which==="crew")pages.push(["主人公","ありがとうございます！\nいよいよ冒険が始まるんだ。"]);
+ conversation(pages);refresh();
 }
-function corridor(){
-rect(0,0,360,270,'#e4d7c9');poly([[70,0],[290,0],[355,270],[5,270]],'#d2d8cb');poly([[124,0],[236,0],[293,270],[67,270]],'#e1c6a4');rect(105,0,150,26,'#45637d');txt('ようこそ 沖縄へ',180,18,12,'#fff4d4');
-for(let i=0;i<7;i++){let z=i*27;rect(11,z+24,41,20,'#84cade');rect(15,z+27,34,15,'#47c5ef');rect(19,z+35,24,7,'#54b3a2');rect(309,z+24,41,20,'#84cade');rect(313,z+27,34,15,'#47c5ef')}
-rect(137,30,86,49,'#b6e8f5');rect(137,63,86,16,'#44a8c0');rect(137,42,86,20,'#48b7f3');rect(139,58,82,2,'#c4efff');rect(151,25,58,7,'#2d7559');txt('到着',181,31,6,'#fff');
-for(let i=0;i<11;i++)rect(65+i*22,250-i*18,110-i*9,1,'#f3e5cc');
-person(119,159,'#6fbbbe','#53618d','#463b33',1.05,true);person(242,139,'#da8461','#425d87','#40322e',.95);
-flower(80,225,3);flower(278,224,3)
+function count(){return Object.values(visited).filter(Boolean).length}
+function refresh(){
+ const goal=step===0?"まずは上の棚の荷物を取ろう":step===1?"通路の先の出口へ向かおう":step===2?"窓の外や周りを見てみよう":step===3?"客室乗務員にお礼を伝えよう":"さあ、沖縄へ！";
+ E("goal").textContent=goal;E("count").textContent=count()+" / 3 DISCOVERED";
+ E("progress").style.width=Math.round((step/4)*100)+"%";
+ for(let k=0;k<5;k++){let node=E("s"+k);node.className=k<step?"passed":k===step?"active":""}
+ E("spotLabel").textContent=["STAGE 01 · 機内","STAGE 02 · 荷物を確認","STAGE 03 · 通路","STAGE 04 · 降機口","STAGE 05 · 沖縄へ"][step];
+ E("bag").hidden=step>=3;E("window").hidden=step>=4;E("crew").hidden=step<2||step>=4;
+ art.style.transform="scale("+(1+step*.14)+") translate("+(-step*1.5)+"%,"+(step*2.5)+"%)";
+ art.style.filter="saturate("+(1+step*.04)+") brightness("+(1+step*.035)+")";
+ E("sunlight").style.opacity=String(.35+step*.15);
+ E("jbag").textContent=(visited.bag?"✓":"○")+" 上の棚から手荷物を取る";
+ E("jwindow").textContent=(visited.window?"✓":"○")+" 沖縄の青い空を見る";
+ E("jcrew").textContent=(visited.crew?"✓":"○")+" 客室乗務員にお礼を言う";
 }
-function lobby(){
-rect(0,0,360,270,'#d9cdb9');rect(0,0,360,42,'#f1dfbf');
-for(let i=0;i<8;i++){rect(i*46,43,35,74,'#5ba8ba');rect(i*46+4,46,27,63,'#75c9ec');rect(i*46+7,80,23,30,'#62bd83')}
-rect(92,43,178,37,'#233f5d');txt('めんそーれ 沖縄へ！',181,60,13,'#ffd483');txt('那覇空港 到着ロビー',181,73,8,'#fff');
-poly([[0,121],[360,121],[360,270],[0,270]],'#ebd6b1');for(let i=0;i<12;i++){rect(0,133+i*13,360,1,'#f6eaca');rect(i*36,120,1,150,'#f2e7d1')}
-for(let i=0;i<5;i++){let x=35+i*74;rect(x,122,6,25,'#6a735e');rect(x-8,110,22,19,'#329b62');flower(x-3,113,2)}
-person(70,190,'#edbd77','#608ab2','#3f3139',1.25,true);person(300,188,'#66c2aa','#3b6e9a','#35333b',1.2);
-flower(45,221,3);flower(314,225,4)
+function advance(){
+ if(!started||complete||E("journalPanel").hidden===false)return;
+ if(busy){deliver();return}
+ if(step===0&&!visited.bag){conversation([["主人公","おっと、バッグを忘れるところだった！\n左上の荷物マークをタップしよう。"]]);return}
+ if(step===3&&!visited.crew){conversation([["主人公","出る前に、乗務員さんにお礼を言おう。"]]);return}
+ step=Math.min(step+1,4);refresh();fx(480+step*65);
+ if(step===1)conversation([["主人公","準備完了！　列に並んで、前へ進もう。"]]);
+ else if(step===2)conversation([["主人公","もうすぐ降りられる！\n外がまぶしい……！"]]);
+ else if(step===3)conversation([["客室乗務員","出口はこちらです。お足元にお気をつけください。"]]);
+ else if(step===4){conversation([["主人公","わあ、あったかい！\n沖縄に来たんだ……！"]]);setTimeout(()=>{if(step===4&&!complete)finish()},1700)}
 }
-function mainHero(){person(180,y,'#f5f4e8','#298fc4','#292b37',1.4);rect(172,y-5,7,17,'#28333f');rect(173,y-4,5,12,'#464651');if(Math.abs(goal-y)>1)rect(165,y+14,4,2,'#f4b44d');rect(177,y-28,6,3,'#f9de75')}
-function speech(who,message){$('speaker').textContent=who;$('message').textContent=message}
-function state(){ $('place').textContent=mode===0?'STEP 1 / 飛行機の中':mode===1?'STEP 2 / ボーディングブリッジ':'STEP 3 / 到着ロビー'}
-function next(){if(done)return;if(mode===0){mode=1;y=240;goal=236;speech('ちゅらたび','飛行機を降りた！ 沖縄の空気が待っている！')}else if(mode===1){mode=2;y=241;goal=234;speech('ちゅらたび','もうすぐ到着ロビー！ 何から楽しもうかな？')}else{done=true;$('finish').style.display='flex';$('replay').style.display='inline-block';$('go').style.display='none';$('back').style.display='none';$('speech').style.display='none'}state()}
-function advance(){if(done)return;goal=Math.max(63,goal-22);if(y<87){next();return}chirp()}
-function retreat(){if(done)return;goal=Math.min(233,goal+18)}
-function chirp(){try{const a=window.AudioContext||window.webkitAudioContext;if(!a)return;let c=window._audio||(window._audio=new a());let o=c.createOscillator(),v=c.createGain();o.type='sine';o.frequency.value=520;v.gain.setValueAtTime(.016,c.currentTime);v.gain.exponentialRampToValueAtTime(.001,c.currentTime+.08);o.connect(v).connect(c.destination);o.start();o.stop(c.currentTime+.085)}catch(e){}}
-function draw(){frame++;if(Math.abs(goal-y)>.5)y+=(goal-y)*.11;else y=goal;
-if(!said&&mode===0&&y<145){speech('客室乗務員','ご搭乗ありがとうございました！ 沖縄を楽しんでくださいね。');said=true}
-if(y<75&&Math.abs(goal-y)<3)next();
-if(mode===0)backdrop(frame);else if(mode===1)corridor();else lobby();
-mainHero();
-for(let i=0;i<8;i++){let xx=(i*73+frame*.17)%360,yy=(i*33+frame*.08)%108;if(mode!==0)rect(xx,yy,2,2,'#fff5be')}
-requestAnimationFrame(draw)}
-let hold=0;$('go').addEventListener('pointerdown',()=>{advance();hold=setInterval(advance,155)});['pointerup','pointercancel','pointerleave'].forEach(e=>$('go').addEventListener(e,()=>clearInterval(hold)));
-$('back').onclick=retreat;$('replay').onclick=()=>{done=false;mode=0;y=222;goal=222;said=false;$('finish').style.display='none';$('speech').style.display='block';$('go').style.display='inline-block';$('back').style.display='inline-block';$('replay').style.display='none';speech('ちゅらたび','ついに沖縄に着いた！ 前の出口へ進もう！');state()};
-$('speech').onclick=()=>{if(y<90)next();else advance()};
-canvas.addEventListener('pointerdown',e=>{const r=canvas.getBoundingClientRect();let yy=(e.clientY-r.top)/r.height*270;if(yy<125)advance();else if(yy>235)retreat();else advance()});
-document.addEventListener('keydown',e=>{if(['ArrowUp','ArrowRight',' ','Enter'].includes(e.key)){e.preventDefault();advance()}if(['ArrowDown','ArrowLeft'].includes(e.key)){e.preventDefault();retreat()}});state();draw();
+function finish(){if(complete)return;complete=true;E("finish").hidden=false;fx(784);setTimeout(()=>fx(1047),120);E("walk").textContent="到着！";E("walk").disabled=true}
+function back(){if(!started||complete||busy)return;step=Math.max(0,step-1);refresh();fx(400)}
+E("bag").onclick=()=>hit("bag");E("window").onclick=()=>hit("window");E("crew").onclick=()=>hit("crew");
+dialog.onclick=()=>{if(busy)deliver();else advance()};E("walk").onclick=advance;E("back").onclick=back;
+E("play").onclick=()=>{started=true;E("start").hidden=true;conversation([["主人公","着いた……！　沖縄だ！"],["主人公","まずは荷物を取って、出口へ行こう。"]]);refresh()};
+E("toLobby").onclick=()=>{location.href="../arrival/"};
+E("journal").onclick=()=>{E("journalPanel").hidden=false;fx(420)};E("closeJournal").onclick=()=>E("journalPanel").hidden=true;
+E("journalPanel").addEventListener("click",e=>{if(e.target===E("journalPanel"))E("journalPanel").hidden=true});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")E("journalPanel").hidden=true; if(["ArrowUp","ArrowRight"].includes(e.key)){e.preventDefault();advance()} if(["ArrowDown","ArrowLeft"].includes(e.key)){e.preventDefault();back()} if((e.key==="Enter"||e.key===" ")&&document.activeElement===dialog){e.preventDefault();dialog.click()}});
+let touchY=null;stage.addEventListener("touchstart",e=>{touchY=e.touches[0]?.clientY??null},{passive:true});stage.addEventListener("touchend",e=>{if(touchY===null||e.target.closest("button"))return;const diff=e.changedTouches[0].clientY-touchY;if(diff < -42)advance();touchY=null},{passive:true});
+const spark=E("sparkle");for(let i=0;i<15;i++){const d=document.createElement("i");d.className="particle";d.style.left=(47+(i*17)%45)+"%";d.style.top=(10+(i*31)%67)+"%";d.style.animationDelay=(-(i*.73))+"s";d.style.animationDuration=(3+(i%5))+"s";spark.append(d)}
+// Use the full illustration when present locally; on GitHub Pages use its compact transport asset.
+art.addEventListener("error",async()=>{if(art.dataset.fallback)return;art.dataset.fallback="1";try{const r=await fetch("cabin.b64");if(!r.ok)throw Error("missing art");art.src="data:image/webp;base64,"+(await r.text()).trim()}catch(_){art.style.display="none";stage.style.background="linear-gradient(145deg,#0c77ac,#81d7d3 55%,#eec68c)"}});
+art.src="cabin.png";refresh();
 })();
-</script></body></html>
+</script>
+</body></html>
