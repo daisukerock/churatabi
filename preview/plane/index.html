@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#10283e">
+<title>ちゅらたび｜飛行機到着編</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100dvh;background:radial-gradient(ellipse at top,#285879,#102638 68%,#0b1929);font-family:system-ui,-apple-system,sans-serif;color:#fff;display:flex;align-items:center;flex-direction:column}
+header{width:min(96vw,760px);padding:16px 3px 10px;display:flex;justify-content:space-between;align-items:center;font-size:14px}header b{font-size:22px;letter-spacing:.08em;color:#ffdd85}header span{color:#addbeb}
+main{width:min(96vw,760px);position:relative;border:4px solid #e5cca0;box-shadow:0 0 0 4px #233c58,0 18px 45px #071727aa;border-radius:12px;overflow:hidden;background:#192e47}
+canvas{display:block;width:100%;aspect-ratio:4/3;image-rendering:pixelated;image-rendering:crisp-edges;touch-action:none}
+#hud{position:absolute;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;gap:6px;pointer-events:none}
+.pill{border:2px solid #ffedc2;background:#0d315ac9;border-radius:5px;box-shadow:0 3px 0 #101d33;padding:5px 9px;font-size:clamp(10px,2.3vw,15px);font-weight:bold}
+#speech{position:absolute;bottom:13px;left:6%;width:88%;padding:12px 17px 13px;min-height:79px;background:#10233de8;border:3px solid #f2e4c3;box-shadow:0 4px 0 #12243c,0 0 0 2px #415f7e inset;border-radius:8px;text-shadow:1px 1px #000;cursor:pointer}
+#speaker{font-size:12px;color:#92dcff;font-weight:700;margin-bottom:6px}#message{font-size:clamp(13px,2.8vw,19px);line-height:1.4}
+#controls{width:min(96vw,760px);display:flex;align-items:center;justify-content:space-between;gap:10px;padding:20px 4px 8px}button{font-family:inherit;background:#234c71;border:2px solid #f9e2aa;box-shadow:0 4px 0 #0a1a30;color:white;padding:11px 14px;border-radius:10px;font-size:16px;font-weight:700;touch-action:manipulation;cursor:pointer}button:active{transform:translateY(3px);box-shadow:none}#go{background:#2c785a;flex:1;max-width:230px}#back{flex:1;max-width:140px}#replay{background:#9d553c;display:none}#instruction{font-size:12px;color:#afc6d7;text-align:center;line-height:1.8;padding:6px 12px 30px}#finish{display:none;position:absolute;inset:0;background:linear-gradient(180deg,#174e7db8,#08203be8);align-items:center;justify-content:center;flex-direction:column;gap:10px;text-align:center;padding:30px}#finish h1{font-size:clamp(22px,6vw,46px);color:#ffe494;text-shadow:3px 4px #2f3e65;margin:0}#finish p{line-height:1.8;font-weight:bold;font-size:clamp(15px,2.8vw,21px)}
+</style></head><body>
+<header><b>✈ ちゅらたび</b><span>CHURATABI · NAHA AIRPORT</span></header>
+<main><canvas id="game" width="360" height="270" aria-label="沖縄に到着した飛行機の中を歩いて降りるゲーム"></canvas>
+<div id="hud"><span class="pill" id="place">STEP 1 / 機内</span><span class="pill">☀ 沖縄へようこそ</span></div>
+<div id="speech" role="button" tabindex="0" aria-label="会話を進める"><div id="speaker">ちゅらたび</div><div id="message">ついに沖縄に着いた！ 前の出口へ進もう！</div></div>
+<div id="finish"><h1>めんそーれ！ 沖縄</h1><p>飛行機を降りた！<br>ここから旅がはじまる。</p></div>
+</main><div id="controls"><button id="back">▼ もどる</button><button id="go">▲ 出口へ進む</button><button id="replay">↻ もう一度</button></div>
+<div id="instruction">出口へ進むを長押し／通路をタップして歩こう。<br>キーボードの ↑↓ でも操作できます。</div>
+<script>
+(function(){
+'use strict';
+const canvas=document.getElementById('game'),g=canvas.getContext('2d');g.imageSmoothingEnabled=false;
+const C={navy:'#173654',seat:'#275a84',seatEdge:'#142c55',seatHi:'#4784a4',sand:'#f6d194',sky:'#4ebaf1',warm:'#fff1bc'};
+const $=id=>document.getElementById(id);let y=222,mode=0,goal=222,walking=false,frame=0,said=false,done=false,dialogDelay=0;
+function rect(x,y,w,h,c){g.fillStyle=c;g.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))}
+function poly(pts,c){g.fillStyle=c;g.beginPath();pts.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.closePath();g.fill()}
+function txt(s,x,y,z=9,color='#fff'){g.font='bold '+z+'px monospace';g.textAlign='center';g.fillStyle='#0f304c';g.fillText(s,x+1,y+1);g.fillStyle=color;g.fillText(s,x,y)}
+function person(x,py,shirt='#e6e2cf',pants='#315879',hair='#352d31',scale=1,hat=false){
+g.save();g.translate(Math.round(x),Math.round(py));g.scale(scale,scale);
+rect(-5,4,10,7,'#142d49');rect(-4,4,8,6,pants);rect(-4,-4,8,10,shirt);rect(-3,-13,6,8,'#f0b77c');rect(-4,-15,8,4,hair);rect(-7,-1,3,9,'#ecb481');rect(4,-1,3,9,'#ecb481');rect(-4,9,3,5,'#27405e');rect(1,9,3,5,'#27405e');
+if(hat){rect(-6,-14,12,2,'#edc783');rect(-4,-17,8,4,'#e4b96e')}g.restore()
+}
+function flower(x,yy,s=1){rect(x,yy,2*s,2*s,'#e43b68');rect(x+s,yy-s,s,s,'#fa8b8b');rect(x-s,yy+s,s,s,'#f94d79');rect(x+2*s,yy+s,s,s,'#d61d5b');rect(x+s,yy+s,s,s,'#ffe18b')}
+function backdrop(t){
+rect(0,0,360,270,'#eacda9');rect(0,0,360,39,'#c8a88a');for(let i=0;i<13;i++)rect(i*30,5,25,3,'#f7e3c2');rect(2,36,356,10,'#efdcbb');
+poly([[0,45],[114,45],[144,250],[0,270]],'#ede0ce');poly([[247,45],[360,45],[360,270],[217,250]],'#e9d8c2');
+poly([[136,60],[225,60],[266,270],[94,270]],'#af8c86');for(let z=0;z<13;z++)rect(101-z*.7,240-z*16,158+z*1.4,1,'#eed4a6');
+for(let k=0;k<4;k++){let xx=k*22+6;rect(xx,70,17,35,'#abc3cc');rect(xx+2,73,13,29,C.sky);rect(xx+2,89,13,10,'#63bfc2');rect(xx+3,82,9,2,'#fff9d9')}
+for(let k=0;k<4;k++){let xx=260+k*25;rect(xx,70,17,35,'#abc3cc');rect(xx+2,73,13,29,C.sky);rect(xx+2,89,13,10,'#5ec3b5');rect(xx+3,82,9,2,'#fff9d9')}
+for(let k=0;k<5;k++){let q=k*44;let a=20+q*.2; let sy=75+q*.8;const W=43+q*.34,H=43+q*.17;
+let left=140-W-3,right=221+3;
+rect(left-3,sy-3,W+6,H+6,C.seatEdge);rect(left,sy,W,H,C.seat);rect(left+3,sy+5,W-6,8,C.seatHi);rect(left+8,sy+H-10,W-16,8,'#102e59');
+rect(right,sy-3,W+6,H+6,C.seatEdge);rect(right+3,sy,W,H,C.seat);rect(right+6,sy+5,W-6,8,C.seatHi);rect(right+11,sy+H-10,W-16,8,'#102e59')}
+rect(142,47,78,51,'#a3bdc5');rect(149,49,65,45,'#75c4f4');rect(149,79,65,15,'#71c6a1');rect(156,80,45,4,'#317f9c');rect(155,60,16,8,'#ffffff');rect(180,55,12,5,'#ffffff');
+rect(149,96,66,7,'#84655c');rect(173,43,18,6,'#f5d78b');rect(166,34,30,11,'#2a724f');txt('EXIT',181,42,8,'#fff6d6');
+for(let i=0;i<8;i++){let xx=(i*48+16)%360;rect(xx,15,18,5,'#fff5c1')}
+rect(9,113,43,27,'#eff0d4');rect(12,116,37,21,'#1579a7');txt('OKINAWA',30,125,7,'#fff');flower(13,132,2);flower(37,132,2);
+rect(304,113,45,27,'#fcebd1');rect(307,116,39,21,'#228caa');txt('めんそーれ',326,129,7,'#fff8cf');flower(308,132,2);flower(340,132,2);
+person(124,124,'#50a59b','#686e8b','#2a313d',.65,true);
+person(246,133,'#db916e','#617ca0','#372a31',.77,false);
+person(115,187,'#efb164','#5c6da0','#4f2f36',1.1,true);
+person(250,192,'#ed647e','#5378a2','#3b3345',1.1,false);
+for(let i=0;i<10;i++){rect(88+i*20,256,8,2,i%2?'#cdad89':'#f2cd9d')}
+}
+function corridor(){
+rect(0,0,360,270,'#e4d7c9');poly([[70,0],[290,0],[355,270],[5,270]],'#d2d8cb');poly([[124,0],[236,0],[293,270],[67,270]],'#e1c6a4');rect(105,0,150,26,'#45637d');txt('ようこそ 沖縄へ',180,18,12,'#fff4d4');
+for(let i=0;i<7;i++){let z=i*27;rect(11,z+24,41,20,'#84cade');rect(15,z+27,34,15,'#47c5ef');rect(19,z+35,24,7,'#54b3a2');rect(309,z+24,41,20,'#84cade');rect(313,z+27,34,15,'#47c5ef')}
+rect(137,30,86,49,'#b6e8f5');rect(137,63,86,16,'#44a8c0');rect(137,42,86,20,'#48b7f3');rect(139,58,82,2,'#c4efff');rect(151,25,58,7,'#2d7559');txt('到着',181,31,6,'#fff');
+for(let i=0;i<11;i++)rect(65+i*22,250-i*18,110-i*9,1,'#f3e5cc');
+person(119,159,'#6fbbbe','#53618d','#463b33',1.05,true);person(242,139,'#da8461','#425d87','#40322e',.95);
+flower(80,225,3);flower(278,224,3)
+}
+function lobby(){
+rect(0,0,360,270,'#d9cdb9');rect(0,0,360,42,'#f1dfbf');
+for(let i=0;i<8;i++){rect(i*46,43,35,74,'#5ba8ba');rect(i*46+4,46,27,63,'#75c9ec');rect(i*46+7,80,23,30,'#62bd83')}
+rect(92,43,178,37,'#233f5d');txt('めんそーれ 沖縄へ！',181,60,13,'#ffd483');txt('那覇空港 到着ロビー',181,73,8,'#fff');
+poly([[0,121],[360,121],[360,270],[0,270]],'#ebd6b1');for(let i=0;i<12;i++){rect(0,133+i*13,360,1,'#f6eaca');rect(i*36,120,1,150,'#f2e7d1')}
+for(let i=0;i<5;i++){let x=35+i*74;rect(x,122,6,25,'#6a735e');rect(x-8,110,22,19,'#329b62');flower(x-3,113,2)}
+person(70,190,'#edbd77','#608ab2','#3f3139',1.25,true);person(300,188,'#66c2aa','#3b6e9a','#35333b',1.2);
+flower(45,221,3);flower(314,225,4)
+}
+function mainHero(){person(180,y,'#f5f4e8','#298fc4','#292b37',1.4);rect(172,y-5,7,17,'#28333f');rect(173,y-4,5,12,'#464651');if(Math.abs(goal-y)>1)rect(165,y+14,4,2,'#f4b44d');rect(177,y-28,6,3,'#f9de75')}
+function speech(who,message){$('speaker').textContent=who;$('message').textContent=message}
+function state(){ $('place').textContent=mode===0?'STEP 1 / 飛行機の中':mode===1?'STEP 2 / ボーディングブリッジ':'STEP 3 / 到着ロビー'}
+function next(){if(done)return;if(mode===0){mode=1;y=240;goal=236;speech('ちゅらたび','飛行機を降りた！ 沖縄の空気が待っている！')}else if(mode===1){mode=2;y=241;goal=234;speech('ちゅらたび','もうすぐ到着ロビー！ 何から楽しもうかな？')}else{done=true;$('finish').style.display='flex';$('replay').style.display='inline-block';$('go').style.display='none';$('back').style.display='none';$('speech').style.display='none'}state()}
+function advance(){if(done)return;goal=Math.max(63,goal-22);if(y<87){next();return}chirp()}
+function retreat(){if(done)return;goal=Math.min(233,goal+18)}
+function chirp(){try{const a=window.AudioContext||window.webkitAudioContext;if(!a)return;let c=window._audio||(window._audio=new a());let o=c.createOscillator(),v=c.createGain();o.type='sine';o.frequency.value=520;v.gain.setValueAtTime(.016,c.currentTime);v.gain.exponentialRampToValueAtTime(.001,c.currentTime+.08);o.connect(v).connect(c.destination);o.start();o.stop(c.currentTime+.085)}catch(e){}}
+function draw(){frame++;if(Math.abs(goal-y)>.5)y+=(goal-y)*.11;else y=goal;
+if(!said&&mode===0&&y<145){speech('客室乗務員','ご搭乗ありがとうございました！ 沖縄を楽しんでくださいね。');said=true}
+if(y<75&&Math.abs(goal-y)<3)next();
+if(mode===0)backdrop(frame);else if(mode===1)corridor();else lobby();
+mainHero();
+for(let i=0;i<8;i++){let xx=(i*73+frame*.17)%360,yy=(i*33+frame*.08)%108;if(mode!==0)rect(xx,yy,2,2,'#fff5be')}
+requestAnimationFrame(draw)}
+let hold=0;$('go').addEventListener('pointerdown',()=>{advance();hold=setInterval(advance,155)});['pointerup','pointercancel','pointerleave'].forEach(e=>$('go').addEventListener(e,()=>clearInterval(hold)));
+$('back').onclick=retreat;$('replay').onclick=()=>{done=false;mode=0;y=222;goal=222;said=false;$('finish').style.display='none';$('speech').style.display='block';$('go').style.display='inline-block';$('back').style.display='inline-block';$('replay').style.display='none';speech('ちゅらたび','ついに沖縄に着いた！ 前の出口へ進もう！');state()};
+$('speech').onclick=()=>{if(y<90)next();else advance()};
+canvas.addEventListener('pointerdown',e=>{const r=canvas.getBoundingClientRect();let yy=(e.clientY-r.top)/r.height*270;if(yy<125)advance();else if(yy>235)retreat();else advance()});
+document.addEventListener('keydown',e=>{if(['ArrowUp','ArrowRight',' ','Enter'].includes(e.key)){e.preventDefault();advance()}if(['ArrowDown','ArrowLeft'].includes(e.key)){e.preventDefault();retreat()}});state();draw();
+})();
+</script></body></html>
