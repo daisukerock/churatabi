@@ -25,6 +25,14 @@
 - 画面を目視し、横向き時の目標パネルと人物の重なり、PCの左右余白を修正。
 - 機械可読の結果と画面証跡は `docs/qa/` に保存。WebKitはmacOS用のテストブラウザであり、iOSの実機テストではない。
 
+## 公開後の検証
+
+- ソースコミット `314d31f101007a9bf112f4e946b30599de3fb0d3` のGitHub Pagesビルド成功。
+- 公開候補のHTML、CSS、全JS、全PNGを取得し、ローカルでテストしたファイルとSHA-256が一致。
+- 既存公開版の `index.html` と `preview/v07.html` は、公開URLから取得した内容が変更前とバイト単位で一致。
+- 公開URLをWebKitの390×844タッチ環境で開き、素材読み込みと案内係へ接近して会話開始まで成功。JavaScriptエラーなし。
+- 結果: `docs/qa/published-result.json`、公開画面: `docs/qa/published-webkit.png`。再検証は `node tests/published.cjs`。
+
 ## 完成判定を保留する項目
 
 1. **iPhone実機Safari**で、アドレスバー伸縮・ノッチ・ホームインジケーター・長時間プレイ・着信/復帰・実際の効果音の聴感を未確認。WebKitのエミュレーションで代替済みとはしない。

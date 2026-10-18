@@ -1,0 +1,57 @@
+{
+  "passed": true,
+  "codeCommit": "314d31f101007a9bf112f4e946b30599de3fb0d3",
+  "url": "https://daisukerock.github.io/churatabi/preview/arrival/",
+  "checks": [
+    "published candidate matches local tested files byte for byte",
+    "original published index and v07 unchanged byte for byte",
+    "public WebKit mobile loads and opens guide dialogue"
+  ],
+  "originals": {
+    "index.html": "b3616e492efcafd5cad0d980f36f3f71c8d35df6c95a33d23a07c736503f1efb",
+    "preview/v07.html": "ab30953d925373c99ecd8674cbca1c3d9e472e13b6a0856a44bf422529ce9da7"
+  },
+  "assets": {
+    "index.html": {
+      "status": 200,
+      "sha256": "f1b745c1814fb39c1c356ed75e3001233e1fccacdd656136d79025e28ecbb919"
+    },
+    "style.css": {
+      "status": 200,
+      "sha256": "23317333f3a8901e0843a1f64744b7ed6a532a66dc0b9d91c577df1a368a27bb"
+    },
+    "world.mjs": {
+      "status": 200,
+      "sha256": "5d46818d107167b3c264ca36d52495611483897e19c50c071a1ed2eaaaf6f140"
+    },
+    "game.mjs": {
+      "status": 200,
+      "sha256": "b7c07299dbfc01cfdc272db76e2209efabbbe5db0801e52dcfb40210850fcc21"
+    },
+    "assets/lobby.png": {
+      "status": 200,
+      "sha256": "d9599281fdbf448c5a1fafb69b5ba0e325ca9831dcb673022a0c0ec054bdace2"
+    },
+    "assets/hero.png": {
+      "status": 200,
+      "sha256": "1da95539dfc85435b7b562c5de3fbc0ea79b6096ee0cf47092024fc7b9a32dc1"
+    },
+    "assets/guide.png": {
+      "status": 200,
+      "sha256": "95b081cb754dca160023a87ce480543d7b9cc168915f9014df84fae3af7dd391"
+    },
+    "assets/grandma.png": {
+      "status": 200,
+      "sha256": "88433e1495c193339a301d71b0c5828b5cd9a490d1877c2c5d4af38325971128"
+    },
+    "assets/traveler.png": {
+      "status": 200,
+      "sha256": "51e8c75a69c8fcf9dc13c88dcd89bfd2080e53aef6435ee0952c6b4b105052de"
+    },
+    "assets/postcard.png": {
+      "status": 200,
+      "sha256": "1a1c8abb0288464afbe124293401f47a57dcf7a505c95235a3fa8d0c26feb156"
+    }
+  },
+  "errors": []
+}
