@@ -30,6 +30,21 @@ description: ちゅらたびのゲーム用ドット絵、32x48キャラクタ�
 - **制限**: 見た目がユーザーの元画像と完全に同じとは保証しない。別キャラクター・別衣装の制作にはプログラムの描画定義を変更し、検査後に目視確認する。
 - 共通検証/梱包機能は `scripts/sprite_pipeline.py`。両者は別の役割を持ち、共存する。
 
+## リサイズ用Python部品（v1.2）
+- `scripts/resize_sprite.py`: キャラの元画像を32×48実ピクセルに縮小・拡大する専用部品。縦横比保持、人物領域のトリミング、足元を下に揃える、透過PNG/単色背景切り抜き、パレット選択、外側1px輪郭に対応。
+- **注意**: リサイズはドット絵の描き直しではない。目・顔・靴・輪郭・歩行の視覚品質をAIが検査し、必要なら描画ツールで補修する。ユーザーに1px単位の手作業を要求しない。
+- 既定では `<file>.png.draft.json` を出力し、`sprite_pipeline.py validate` が未承認素材を弾く。修正と目視確認後のみ `--no-draft-marker` で出力可能。独立した複数フレームの位置ずれも別途確認する。
+- 原画を絶対に上書きしない。複雑な背景は自動切り抜き不可。単色背景だけ外縁から塗りつぶして除去。原画や画像シートの人物1人を切るには `--crop x,y,w,h`。
+- 単一画像:
+```bash
+python scripts/resize_sprite.py --input original.png --output examples/drafts/front_idle.png
+```
+- フレーム一括処理:
+```bash
+python scripts/resize_sprite.py --input frames_original/ --output examples/drafts/frames/
+```
+- ソースに既存の輪郭があり輪郭が厚く見える場合は `--outline inside` を選ぶ。元色を維持したい場合は `--palette preserve`。必ず目視確認する。
+
 ## コマンド
 依存: `python -m pip install -r requirements.txt`。Skill ディレクトリから実行する。
 
