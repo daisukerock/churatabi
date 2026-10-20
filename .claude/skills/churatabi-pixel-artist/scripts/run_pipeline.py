@@ -143,10 +143,15 @@ def build(output: Path, input_dir: Path, options: rz.Options | None = None,
         raise PipelineError(f'ゲーム主人公のサイズは {SIZE} 固定です')
     views = find_views(Path(input_dir))
     dest = Path(output).resolve()
-    if dest.exists() and any(dest.iterdir()) and not overwrite:
+    source_root = Path(input_dir).resolve()
+    if dest == source_root or dest in source_root.parents or source_root in dest.parents:
+        raise PipelineError('入力画像または入力フォルダの祖先・内部を出力先にできません')
+    if dest in (Path.cwd().resolve(), Path.home().resolve(), Path(dest.anchor)):
+        raise PipelineError('プロジェクトやホームやディスク直下を出力先として使えません')
+    if dest.exists() and not overwrite:
         raise PipelineError(f'既存の出力を保護しました: {dest}。別ディレクトリを指定してください')
-    if Path(input_dir).resolve() == dest or dest in [p.resolve().parent for p in views.values()]:
-        raise PipelineError('入力画像のあるフォルダを出力先として使えません')
+    if dest.exists() and not dest.is_dir():
+        raise PipelineError(f'出力先に同名ファイルがあります: {dest}')
     with tempfile.TemporaryDirectory(prefix='churatabi_pipeline_') as tmp:
         root = Path(tmp)
         drafts = root / 'normalized'
