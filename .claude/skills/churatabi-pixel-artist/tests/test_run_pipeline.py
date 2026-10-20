@@ -50,6 +50,18 @@ class TestRunPipeline(unittest.TestCase):
             run.build(out,self.ins)
         self.assertEqual('keep',(out/'protected.txt').read_text())
 
+    def test_input_ancestor_refused_even_if_overwrite(self):
+        with self.assertRaisesRegex(run.PipelineError,'祖先'):
+            run.build(self.root,self.ins,overwrite=True)
+        self.assertTrue((self.ins/'front.png').exists())
+
+    def test_empty_existing_output_protected(self):
+        out=self.root/'empty'
+        out.mkdir()
+        with self.assertRaisesRegex(run.PipelineError,'保護'):
+            run.build(out,self.ins)
+        self.assertTrue(out.exists())
+
     def test_source_files_remain_unchanged(self):
         hashes={p.name:p.read_bytes() for p in self.ins.glob('*.png')}
         run.build(self.root/'output',self.ins)
