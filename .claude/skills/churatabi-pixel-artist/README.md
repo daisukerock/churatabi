@@ -1,4 +1,4 @@
-# ちゅらたび Pixel Artist Skill v1.0
+# ちゅらたび Pixel Artist Skill v1.1
 
 Claude Code / Codex / Agent Skills 形式に対応する `SKILL.md` + Python ツール一式。
 
@@ -7,6 +7,18 @@ Claude Code / Codex / Agent Skills 形式に対応する `SKILL.md` + Python ツ
 
 ## Codex の導入
 同じフォルダをプロジェクトの `.agents/skills/` に置く。`SKILL.md` を読ませる。Codex のワークフローでもコマンドを実行できる。
+
+## 追加したPython部品
+`scripts/create_hero.py` は主人公v1の再生成・品質検査・書き出し用。 `scripts/sprite_pipeline.py` は共通の検査・シート作成・GIF出力用です。画像生成AIが出した画像を機械的に縮小して完成扱いにはしません。
+
+```bash
+# Skill フォルダ内から実行
+python -m pip install -r requirements.txt
+python scripts/create_hero.py --output examples/hero_v1
+python -m unittest discover -s tests -v
+```
+
+出力: `examples/hero_v1/frames/` に32x48透過PNG×12、 `export/` に96x192シート、フレーム定義JSON、歩行GIF・4倍プレビュー、 `quality.json` に自動検査結果。既存ゲームの画像そのものと同一という保証はないため、採用には目視検査が必要です。
 
 ## Skill単体の動作確認
 ```bash
