@@ -23,10 +23,18 @@ description: ちゅらたびのゲーム用ドット絵、32x48キャラクタ�
 5. `python scripts/sprite_pipeline.py pack --input <frames_dir> --output <out_dir>` でシートと JSON、`preview` で4倍プレビュー、`gif` で動作確認用 GIF を出す。全方向で基準点とコマ間ズレを確認する。
 6. 採用後にプロジェクトの規約に従い `art/hd/chars/` 等へ配置する。試作は `art/hd/_drafts/`。出力物、テスト結果、残る視覚品質上の課題を報告する。
 
+## 主人公の再生成用Python部品
+- `scripts/create_hero.py` は前回制作した主人公v1の「白Tシャツ・青いショートパンツ・茶色いリュック・黒髪」の原寸ドット絵を再現する**実装部品**。このスクリプトを先に使い、必要な視覚修正をコードに反映する。
+- `python scripts/create_hero.py --output examples/hero_v1` の1コマンドで12枚のPNGを描画し、`sprite_pipeline.py` を介して全12枚を自動検査し、96x192シート・JSON・4方向GIF・4倍プレビュー・検査JSONを出力する。
+- 特定の `/mnt/data` 等の環境を参照しない。既存素材の上書きを避けるため、新規の出力先を指定する。
+- **制限**: 見た目がユーザーの元画像と完全に同じとは保証しない。別キャラクター・別衣装の制作にはプログラムの描画定義を変更し、検査後に目視確認する。
+- 共通検証/梱包機能は `scripts/sprite_pipeline.py`。両者は別の役割を持ち、共存する。
+
 ## コマンド
 依存: `python -m pip install -r requirements.txt`。Skill ディレクトリから実行する。
 
 ```bash
+python scripts/create_hero.py --output examples/hero_v1
 python scripts/sprite_pipeline.py demo --output examples/generated
 python scripts/sprite_pipeline.py validate --input examples/generated/frames --report examples/generated/quality.json
 python scripts/sprite_pipeline.py pack --input examples/generated/frames --output examples/generated/export
