@@ -1,4 +1,4 @@
-# ちゅらたび Pixel Artist Skill v1.1
+# ちゅらたび Pixel Artist Skill v1.2
 
 Claude Code / Codex / Agent Skills 形式に対応する `SKILL.md` + Python ツール一式。
 
@@ -31,3 +31,16 @@ python -m unittest discover -s tests -v
 
 ## 安全性
 外部通信・認証情報へのアクセスはしない。画像はユーザーのローカルファイルから処理する。既存ファイルはコマンドで明示的に指定した出力先以外変更しない。出力ディレクトリ上に同名ファイルがある場合は上書きされるため、プロジェクトでは新規作業ディレクトリを使う。
+
+## 追加したリサイズ用Python
+`scripts/resize_sprite.py` は透明PNGや単色背景の原画を32×48pxへ変換する部品です。人物を中心に置き、靴底を最下段に合わせ、1px輪郭を付けます。人の顔や目の特徴の自動再描画は行いません。
+
+```bash
+python -m pip install -r requirements.txt
+python scripts/resize_sprite.py --input original.png --output draft/front_idle.png
+python scripts/resize_sprite.py --input original_frames/ --output draft/frames/
+python scripts/resize_sprite.py --input sheet.png --crop 70,235,290,595 --output draft/front.png
+python -m unittest discover -s tests -v
+```
+
+リサイズしたファイルには `.draft.json` を添え、最終素材と混同しないようにします。確認・修正後のみ納品工程へ進んでください。既存画像を上書きしません。
