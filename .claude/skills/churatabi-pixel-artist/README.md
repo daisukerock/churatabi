@@ -1,46 +1,44 @@
-# ちゅらたび Pixel Artist Skill v1.2
+# ちゅらたび Pixel Artist Skill v2.0
 
-Claude Code / Codex / Agent Skills 形式に対応する `SKILL.md` + Python ツール一式。
+4方向のキャラクター原画から、原寸32x48pxの歩行12コマ、品質検査、ゲーム用スプライトシートまでを1回のPython実行で制作するSkill。
 
-## Claude Code の導入
-このフォルダ `churatabi-pixel-artist` を、プロジェクトの `.claude/skills/` に置く。Claude Code から `/churatabi-pixel-artist` を呼び出すか、キャラのスプライト制作を依頼する。Pillow は `python -m pip install -r .claude/skills/churatabi-pixel-artist/requirements.txt` で導入する。
+## インストール
+このフォルダをClaude Codeプロジェクトの .claude/skills/churatabi-pixel-artist/ に置きます。すでに本リポジトリには追加済みです。
 
-## Codex の導入
-同じフォルダをプロジェクトの `.agents/skills/` に置く。`SKILL.md` を読ませる。Codex のワークフローでもコマンドを実行できる。
+## 実行（Skillフォルダ内から）
+初回だけ依存を導入：
 
-## 追加したPython部品
-`scripts/create_hero.py` は主人公v1の再生成・品質検査・書き出し用。 `scripts/sprite_pipeline.py` は共通の検査・シート作成・GIF出力用です。画像生成AIが出した画像を機械的に縮小して完成扱いにはしません。
+    python -m pip install -r requirements.txt
 
-```bash
-# Skill フォルダ内から実行
-python -m pip install -r requirements.txt
-python scripts/create_hero.py --output examples/hero_v1
-python -m unittest discover -s tests -v
-```
+4方向の原画を source_4views/ に準備。必要な名前：
 
-出力: `examples/hero_v1/frames/` に32x48透過PNG×12、 `export/` に96x192シート、フレーム定義JSON、歩行GIF・4倍プレビュー、 `quality.json` に自動検査結果。既存ゲームの画像そのものと同一という保証はないため、採用には目視検査が必要です。
+    source_4views/front.png
+    source_4views/back.png
+    source_4views/left.png
+    source_4views/right.png
 
-## Skill単体の動作確認
-```bash
-python -m pip install -r requirements.txt
-python scripts/sprite_pipeline.py demo --output examples/generated
-python -m unittest discover -s tests -v
-```
+一括実行：
 
-動作確認で生成されるデモPNGは仮のサンプルキャラクターであり、既存主人公アセットの代替ではありません。
+    python scripts/run_pipeline.py --input-dir source_4views --output output/hero_draft_v2
 
-## 安全性
-外部通信・認証情報へのアクセスはしない。画像はユーザーのローカルファイルから処理する。既存ファイルはコマンドで明示的に指定した出力先以外変更しない。出力ディレクトリ上に同名ファイルがある場合は上書きされるため、プロジェクトでは新規作業ディレクトリを使う。
+正常終了すると：
+- output/hero_draft_v2/normalized/：4方向のリサイズ済み原画
+- output/hero_draft_v2/frames/：歩行12コマ
+- output/hero_draft_v2/export/：96x192シート、JSON、GIF、4倍プレビュー
+- output/hero_draft_v2/quality.json、manifest.json：QAと変換記録
 
-## 追加したリサイズ用Python
-`scripts/resize_sprite.py` は透明PNGや単色背景の原画を32×48pxへ変換する部品です。人物を中心に置き、靴底を最下段に合わせ、1px輪郭を付けます。人の顔や目の特徴の自動再描画は行いません。
+## テスト
 
-```bash
-python -m pip install -r requirements.txt
-python scripts/resize_sprite.py --input original.png --output draft/front_idle.png
-python scripts/resize_sprite.py --input original_frames/ --output draft/frames/
-python scripts/resize_sprite.py --input sheet.png --crop 70,235,290,595 --output draft/front.png
-python -m unittest discover -s tests -v
-```
+    python -m unittest discover -s tests -v
 
-リサイズしたファイルには `.draft.json` を添え、最終素材と混同しないようにします。確認・修正後のみ納品工程へ進んでください。既存画像を上書きしません。
+## 主な部品
+- scripts/run_pipeline.py：原画を入力し、処理をすべて順番に実行する中心プログラム
+- scripts/resize_sprite.py：リサイズ、透過、1px外郭、足元合わせ、パレット処理
+- scripts/sprite_pipeline.py：12コマの検証、PNGシート、GIF、JSON出力
+- scripts/create_hero.py：事前にコード定義した主人公の12コマデモ生成
+- tests/test_run_pipeline.py：端から端までの実行テスト
+
+## 制約
+自動処理は入力された4方向の絵の細部を完全に「描き直す」ものではありません。現状の歩行は脚ドットの移動で生成する試作アニメーションです。顔や腕の自然な動き、元画像への忠実さ、iPhone実機での完成品質はAIが別途目視確認・再作画します。
+
+出力のステータスはDRAFT_VISUAL_REVIEW_REQUIREDです。原画に4方向が揃わない場合は明示的に停止し、存在しない方向を勝手に完成扱いしません。原画や既存のゲーム本体は自動で上書きしません。
