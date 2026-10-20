@@ -1,73 +1,78 @@
 ---
 name: churatabi-pixel-artist
-description: ちゅらたびのゲーム用ドット絵、32x48キャラクタースプライト、4方向歩行アニメーション、透過PNG、スプライトシート、品質検査をPythonで制作する時に使う。
+description: ちゅらたびの主人公を32x48px実ピクセルで制作し、4方向原画から歩行12コマへ一括変換・自動品質検査・ゲーム用シート化する時に使うPython Skill。
 ---
 
-# ちゅらたび Pixel Artist
+# ちゅらたび Pixel Artist v2 — 一括制作Skill
 
-## 役割
-ゲームディレクター・ピクセルアーティスト・Pythonプログラマー・QAを兼任する。ユーザーに手描き・手動修正を要求せず、修正を繰り返してゲームへ組み込める素材を出力する。ユーザーが画像や仕様を送ったら、見た目の個性を観察してから制作する。
+## 最重要ルール
+- ユーザーに手作業のピクセル修正を求めない。画像制作、修正、検証はAIが担当する。
+- 既存の主人公原画があるときは、その絵柄・服・髪・顔を基準にする。デモ主人公で置き換えない。
+- メインの実行スクリプトは scripts/run_pipeline.py。リサイズ・コマ生成・QA・出力を一度に呼び出す。
+- 原画の特徴を保持した32x48ドットへの完全自動再描画は、まだ実装されていない。現在の工程は機械的補正＋脚移動による歩行試作で、採用前の目視修正が必要。
+- 自動QAが合格しても製品版とは呼ばない。DRAFT_VISUAL_REVIEW_REQUIRED として出力する。
+- 正面1枚から見えない背面・左右をPythonだけで正確に復元したと主張しない。4方向の原画がなければ生成ツールで不足分を準備するか不足を報告する。
 
-## 規格と優先順位
-1. プロジェクトに `art/hd/hd-art-guide.md` が存在すれば最初に読む。参照画像 `art/hd/refs/pixel_style_sample.png` があれば比較する。ここに定義された旧16x24 / 16x16 など他用途の仕様と、**主人公32x48** の仕様を混同しない。矛盾があれば差分を明示し、該当素材用に明示された最新規格を優先する。存在しないファイルを読んだふりをしない。
-2. 既定は `config.json`: キャラ 32x48 *実ピクセル*、4方向 front/back/left/right、3コマ walk1/idle/walk2、PNG RGBA 完全透過または不透明、輪郭 `#2B1410` の1px、目 `#1A1A1A`。エッジにぼかし・アンチエイリアス・グラデーション・孤立ピクセルは入れない。固定パレットを使う。左上光源。
-3. 頭・服・靴・リュックの形がゲーム内の縮尺で読めること。真上視点のマップに自然に合い、斜め/isometric の床にしない。
-4. 背景・設備・NPCも同じ画風。ただし現行の `sprite_pipeline.py` は**人物専用**。背景は寸法仕様が異なるので、人物パイプラインを無理に転用しない。
-5. 仮素材を完成品として納品しない。機械的な検査が成功しても、画風の魅力、顔の類似、アニメーションの自然さを目視で検証する。
+## 準拠する規格
+- 寸法：32×48px、原寸の透過PNG、RGBAアルファ0/255。
+- 方向：front/back/left/right。ポーズ：walk1/idle/walk2。合計12コマ。
+- 外郭：#2B1410、瞳：#1A1A1A。左上光源、共通色は config.json、靴底基準y=47。
+- プロジェクトに art/hd/hd-art-guide.md があれば読み、最新の対象素材の規格と差分を照合する。存在しなければ無いことを記録する。
+- すべての出力画像はnearest-neighborで表示し、iPhone Safariでの見え方は別途確認する。
 
-## 作業フロー
-1. 依頼内容と利用可能な原画・既存素材・プロジェクト規格を読む。美術的な特徴（髪・服・顔・靴・リュック）を明確にする。
-2. 使用可能な画像生成ツールがあれば原画や方向別ポーズの草案に使える。ただし画像生成の出力を直接32x48完成品と呼ばない。ピクセル格子へ再描画・位置調整・輪郭や目の修正が必要。生成画像を雑に縮小して納品しない。
-3. Pillow による実ピクセル描画や各ドットの手続き的再構成で `front_idle.png` 等を制作する。足の基準線と顔の左右対称性を守り、横向きと背面は単純な色替えではなく形を変える。
-4. `python scripts/sprite_pipeline.py validate --input <frames_dir>` を実行する。エラーは**自分で修正して再実行**。目視確認で問題があれば再制作。ユーザーに1ドットずつ修正させない。
-5. `python scripts/sprite_pipeline.py pack --input <frames_dir> --output <out_dir>` でシートと JSON、`preview` で4倍プレビュー、`gif` で動作確認用 GIF を出す。全方向で基準点とコマ間ズレを確認する。
-6. 採用後にプロジェクトの規約に従い `art/hd/chars/` 等へ配置する。試作は `art/hd/_drafts/`。出力物、テスト結果、残る視覚品質上の課題を報告する。
+## 1コマンドで順番に処理
+最初にPython Pillowの依存を満たす。
 
-## 主人公の再生成用Python部品
-- `scripts/create_hero.py` は前回制作した主人公v1の「白Tシャツ・青いショートパンツ・茶色いリュック・黒髪」の原寸ドット絵を再現する**実装部品**。このスクリプトを先に使い、必要な視覚修正をコードに反映する。
-- `python scripts/create_hero.py --output examples/hero_v1` の1コマンドで12枚のPNGを描画し、`sprite_pipeline.py` を介して全12枚を自動検査し、96x192シート・JSON・4方向GIF・4倍プレビュー・検査JSONを出力する。
-- 特定の `/mnt/data` 等の環境を参照しない。既存素材の上書きを避けるため、新規の出力先を指定する。
-- **制限**: 見た目がユーザーの元画像と完全に同じとは保証しない。別キャラクター・別衣装の制作にはプログラムの描画定義を変更し、検査後に目視確認する。
-- 共通検証/梱包機能は `scripts/sprite_pipeline.py`。両者は別の役割を持ち、共存する。
+    python -m pip install -r requirements.txt
 
-## リサイズ用Python部品（v1.2）
-- `scripts/resize_sprite.py`: キャラの元画像を32×48実ピクセルに縮小・拡大する専用部品。縦横比保持、人物領域のトリミング、足元を下に揃える、透過PNG/単色背景切り抜き、パレット選択、外側1px輪郭に対応。
-- **注意**: リサイズはドット絵の描き直しではない。目・顔・靴・輪郭・歩行の視覚品質をAIが検査し、必要なら描画ツールで補修する。ユーザーに1px単位の手作業を要求しない。
-- 既定では `<file>.png.draft.json` を出力し、`sprite_pipeline.py validate` が未承認素材を弾く。修正と目視確認後のみ `--no-draft-marker` で出力可能。独立した複数フレームの位置ずれも別途確認する。
-- 原画を絶対に上書きしない。複雑な背景は自動切り抜き不可。単色背景だけ外縁から塗りつぶして除去。原画や画像シートの人物1人を切るには `--crop x,y,w,h`。
-- 単一画像:
-```bash
-python scripts/resize_sprite.py --input original.png --output examples/drafts/front_idle.png
-```
-- フレーム一括処理:
-```bash
-python scripts/resize_sprite.py --input frames_original/ --output examples/drafts/frames/
-```
-- ソースに既存の輪郭があり輪郭が厚く見える場合は `--outline inside` を選ぶ。元色を維持したい場合は `--palette preserve`。必ず目視確認する。
+入力フォルダに次の4画像を置く（拡張子png/webp/jpg/jpeg、_idle名でもよい）。
 
-## コマンド
-依存: `python -m pip install -r requirements.txt`。Skill ディレクトリから実行する。
+    original_4views/front.png
+    original_4views/back.png
+    original_4views/left.png
+    original_4views/right.png
 
-```bash
-python scripts/create_hero.py --output examples/hero_v1
-python scripts/sprite_pipeline.py demo --output examples/generated
-python scripts/sprite_pipeline.py validate --input examples/generated/frames --report examples/generated/quality.json
-python scripts/sprite_pipeline.py pack --input examples/generated/frames --output examples/generated/export
-python scripts/sprite_pipeline.py preview --sheet examples/generated/export/spritesheet.png --output examples/generated/export/preview_x4.png
-python scripts/sprite_pipeline.py gif --input examples/generated/frames --output examples/generated/export/front.gif --direction front
-python -m unittest discover -s tests -v
-```
+実行：
 
-- `demo` は**スクリプトの動作確認用サンプル**であり、プロジェクトの主人公原画の完成版ではない。
-- 原画画像から実ピクセル化したラフを作る場合は `draft --source <source.png> --output <path.png>`。draft には `.draft.json` を付け、**validate / pack が納品素材として拒否**する。ラフから最終絵を再描画して承認し、マーカーファイルが存在しない専用フレームディレクトリで検査し直す。
-- 既存32x48素材の機械的補修には `repair --source <source.png> --output <fixed.png>`。サイズ変更しない。結果を必ず目視する。
+    python scripts/run_pipeline.py --input-dir original_4views --output output/draft_v2
 
-## 出力契約
-- `frames/{direction}_{pose}.png`: RGBA 32x48 x 12枚。
-- `export/spritesheet.png`: 3列（walk1, idle, walk2）x 4行（front, back, left, right）、96x192px。
-- `export/spritesheet.json`: 行列配置と各方向のフレームインデックスを定義。
-- `export/preview_x4.png`: nearest-neighbor 4倍の検査画像（ゲーム素材ではない）。
-- `export/<direction>.gif`: テスト用ループ。
-- `quality.json`: 自動検査の判定内容。
+この1コマンドで以下を順に行う。
+1. 4方向の入力画像と出力先の安全性を確認する。
+2. resize_sprite.process_image により切り出し→縦横比保持→32x48→透過/パレット変換→輪郭→足元合わせを行う。既存線画ではinside輪郭を既定にする。
+3. 正面の瞳を左右対称の規定位置へ補正する。原画の目の同一性を保証する工程ではない。
+4. 静止画4方向から下半身をドット単位で移動し、歩行試作のwalk1/idle/walk2を作る。
+5. sprite_pipeline.run_validate で12コマ全ての寸法・アルファ・外郭・色・靴底・瞳・重複を検査。失敗したら品質レポートを保存し、原因を修正して再実行する。
+6. QA合格なら spritesheet.png (96x192)、spritesheet.json、方向別GIF、4倍プレビューを出す。
+7. manifest.json と quality.json に変換情報と検査結果を記録する。
 
-詳しい絵柄判断は `references/art-direction.md`。ゲーム実装用の例は `references/integration.md`。実行の仕様は `scripts/sprite_pipeline.py --help`。
+## 出力と品質の取り扱い
+- normalized/：4方向の正規化した静止画像。
+- frames/：32x48の12枚。
+- export/spritesheet.png：96x192（3列 x 4行）。
+- export/spritesheet.json：フレーム一覧と方向別アニメーション定義。
+- export/front.gif、back.gif、left.gif、right.gif：確認用の歩行GIF。
+- export/preview_x4.png：4倍拡大のチェック画像。
+- quality.json：機械検査、manifest.json：入力と変換記録。
+- ステータスはDRAFT_VISUAL_REVIEW_REQUIRED。自動検査通過は採用許可ではない。
+
+## AIが行う採用前の視覚確認
+- 原画と同じ人物に見えるか、黒髪・白Tシャツ・青短パン・リュック・靴の特徴が残っているか。
+- 目の左右対称だけでなく表情が生きているか。
+- 足が地面を滑らないか、上半身や手の振りに不自然さがないか。
+- 4方向で頭身・バッグの位置・頭頂と靴底が一致しているか。
+- 縮小による潰れ・色混入を検出したらPython描画や画像生成で再作画し、再検査する。
+- 仮素材は勝手に既存ゲームへ上書きせず、承認したものだけ art/hd/chars/ に移す。
+
+## 失敗時
+- 4方向が足りない：見つからない方向を明示する。AIで不足方向を作れない環境では停止する。
+- 背景が複雑：透過素材を別途用意するか、単色のみ--background指定で除去。
+- 出力先に既存ファイル：保護して停止。必要なら新しい出力先を指定。明示的な上書きのみ--overwrite。
+- 不合格の修正方法を推定し、AI自身が元画像・コードを修正して検査し直す。不可能な場合はエラーを隠さない。
+
+## 補助コマンド
+    python scripts/create_hero.py --output examples/hero_demo
+    python scripts/resize_sprite.py --input source.png --output draft/front.png
+    python scripts/sprite_pipeline.py validate --input output/frames --report output/quality.json
+    python -m unittest discover -s tests -v
+
+create_hero.pyは座標定義済みのデモ用主人公であり、任意の原画の再描画装置ではない。
