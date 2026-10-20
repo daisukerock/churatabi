@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "character": "churatabi-protagonist",
+  "width": 32,
+  "height": 48,
+  "directions": ["front", "back", "left", "right"],
+  "poses": ["walk1", "idle", "walk2"],
+  "fps": 6,
+  "outline": "#2B1410",
+  "eye": "#1A1A1A",
+  "palette": {
+    "outline": "#2B1410",
+    "eyes": "#1A1A1A",
+    "hair": "#3D302A",
+    "hair_light": "#5A4637",
+    "skin": "#EAB987",
+    "skin_light": "#F6CF9E",
+    "skin_shadow": "#C98D68",
+    "white_shirt": "#FAF4E8",
+    "shirt_shadow": "#C9D4DA",
+    "blue": "#377C9E",
+    "blue_light": "#65AAC7",
+    "blue_shadow": "#24536E",
+    "shoes": "#6B4838",
+    "shoe_light": "#A77A57",
+    "backpack": "#B5753E",
+    "backpack_light": "#E4A15D"
+  },
+  "baseline_y": 47,
+  "quality_rules": {
+    "require_opaque_binary_alpha": true,
+    "require_1px_external_outline": true,
+    "require_all_frames": true,
+    "require_animated_difference": true,
+    "require_palette": true,
+    "require_nonempty_shoes_on_row_above_baseline": true
+  }
+}
